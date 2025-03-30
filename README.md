@@ -149,7 +149,7 @@ This sets up a fresh React + Vite + Tailwind project in `~/Documents/dev/MERN/Dr
 
 ---
 
-## Commands Summary (Markdown Format)
+## Commands Summary 
 
 Below is every command used, with its purpose:
 
