@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import LoadingAnimation from "../components/function/loadingAnimation";
+import SubLayout from "../components/ui/SubLayout";
 
 const SingleProductViewPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -13,13 +14,9 @@ const SingleProductViewPage = () => {
   return (
     <div className="p-6">
       {isProcessing && <LoadingAnimation />}
-      <h1 className="text-2xl text-orange-500 mb-4">singleProductView Page</h1>
-      <button 
-        onClick={handleProcess}
-        className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
-      >
-        Update Profile
-      </button>
+      <SubLayout title={"Single Product View"}>
+
+      </SubLayout>
     </div>
   );
 };

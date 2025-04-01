@@ -9,8 +9,8 @@ import ProfilePage from "../../pages/ProfilePage";
 import OrdersPage from "../../pages/OrdersPage";
 import ProductsPage from "../../pages/ProductsPage";
 import HomePage from "../../pages/HomePage";
-import SingleProductViewPage from "../../pages/SingleProductView";
-import CheckoutPage from "../../pages/checkout";
+import SingleProductViewPage from "../../pages/SingleProductViewPage";
+import CheckoutPage from "../../pages/checkoutPage";
 
 const MainLayout = () => {
   const location = useLocation();

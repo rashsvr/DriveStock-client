@@ -1,7 +1,7 @@
 // pages/ProfilePage.jsx
 import React, { useState } from "react";
 import LoadingAnimation from "../components/function/loadingAnimation";
-import Title from "../components/Title";
+import SubLayout from "../components/ui/SubLayout";
 
 const ProfilePage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -15,7 +15,9 @@ const ProfilePage = () => {
   return (
     <div className="p-6">
       {isProcessing && <LoadingAnimation />}
-   <Title text={"mfmdkm"}/>
+      <SubLayout title={"Profile"}>
+
+</SubLayout>
     </div>
   );
 };
