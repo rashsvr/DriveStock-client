@@ -21,16 +21,18 @@ const FloatingSidebar = () => {
       )
     },
     {
-      id: "profile",
-      title: "Profile",
-      path: "/profile",
+      id: "products",
+      title: "Products",
+      path: "/products",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
+          <rect x="2" y="3" width="20" height="14" rx="2" />
+          <path d="M2 8h20" />
+          <path d="M9 13h6" />
         </svg>
       )
-    },
+    }
+    ,
     {
       id: "orders",
       title: "Orders",
@@ -44,20 +46,19 @@ const FloatingSidebar = () => {
       )
     },
     {
-      id: "products",
-      title: "Products",
-      path: "/products",
+      id: "profile",
+      title: "Profile",
+      path: "/profile",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <rect x="2" y="3" width="20" height="14" rx="2" />
-          <path d="M2 8h20" />
-          <path d="M9 13h6" />
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
         </svg>
       )
     }
   ];
 
-  const iconCount = icons.length; // Now 4
+  const iconCount = icons.length;
   const baseHeight = 80;
   const iconHeight = 62;
   const collapsedHeight = baseHeight + (iconCount * iconHeight * 0.95);
@@ -67,7 +68,7 @@ const FloatingSidebar = () => {
     <motion.div 
       className="fixed right-6 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center space-y-6 p-4 rounded-xl bg-gray-900/90 border-2 border-orange-500 shadow-xl shadow-orange-500/30 transition-all"
       animate={{ 
-        width: isExpanded ? 69 : 64, 
+        width: 64, // Fixed width to match ThemeToggle's visual column
         height: isExpanded ? expandedHeight : collapsedHeight 
       }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
@@ -90,13 +91,7 @@ const FloatingSidebar = () => {
               opacity: activeIcon === item.id ? 1 : 0,
               x: activeIcon === item.id ? 0 : 10
             }}
-            transition={{ 
-              duration: 0.2,
-              ease: "easeOut",
-              type: "spring",
-              stiffness: 200,
-              damping: 20
-            }}
+            transition={{ duration: 0.2, ease: "easeOut", type: "spring", stiffness: 200, damping: 20 }}
           >
             {item.title}
           </motion.div>
@@ -104,7 +99,7 @@ const FloatingSidebar = () => {
           <motion.div
             className="relative z-10 flex items-center justify-center text-orange-500 transition-colors group-hover:text-orange-300"
             whileHover={{ y: -3 }}
-            animate={{ width: isExpanded ? 41 : 38, height: isExpanded ? 41 : 38 }}
+            animate={{ width: 38, height: 38 }} // Fixed size for consistency
             transition={{ duration: 0.15, ease: "easeInOut" }}
           >
             {item.icon}

@@ -1,10 +1,8 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 
-const ProductCard = () => {
-    const navigate = useNavigate();
-  // Dummy data
-  const dummyProduct = {
+const OrderHistoryCard = () => {
+  // Dummy data with purchase date added
+  const dummyOrder = {
     id: 1,
     name: "Toyota Corolla Brake Pads",
     category: "Braking System",
@@ -20,6 +18,7 @@ const ProductCard = () => {
     material: "Metal",
     sellerLocation: "New York",
     code: "BP-TC2018",
+    purchaseDate: "March 15, 2025", // New field
   };
 
   return (
@@ -28,7 +27,7 @@ const ProductCard = () => {
       <figure className="h-32 w-full">
         <img
           src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
-          alt={dummyProduct.name}
+          alt={dummyOrder.name}
           className="object-cover w-full h-full"
         />
       </figure>
@@ -38,9 +37,9 @@ const ProductCard = () => {
         {/* Title and Badge */}
         <div className="flex items-start gap-2">
           <h2 className="card-title text-base font-semibold truncate flex-1">
-            {dummyProduct.name}
+            {dummyOrder.name}
           </h2>
-          {dummyProduct.condition === "New" && (
+          {dummyOrder.condition === "New" && (
             <div className="badge badge-secondary badge-sm flex-shrink-0">NEW</div>
           )}
         </div>
@@ -48,102 +47,97 @@ const ProductCard = () => {
         {/* Essential Details */}
         <div className="space-y-2 text-sm">
           <p>
-            <span className="font-medium">{dummyProduct.make.join(", ")}</span>
+            <span className="font-medium">{dummyOrder.make.join(", ")}</span>
           </p>
           <p>
-            <span className="font-medium">Availability: </span>
-            <span
-              className={
-                dummyProduct.availability === "In Stock"
-                  ? "text-green-500"
-                  : "text-yellow-500"
-              }
-            >
-              {dummyProduct.availability}
-            </span>
+            <span className="font-medium">Purchase Date: </span>
+            {dummyOrder.purchaseDate}
           </p>
           <p>
-            <span className="font-semibold text-lg">Price: ${dummyProduct.price}</span>
+            <span className="font-semibold text-lg">Price: ${dummyOrder.price}</span>
           </p>
         </div>
 
         {/* Actions */}
-        <div className="card-actions justify-between mt-4 flex-wrap gap-2">
-          <button className="btn btn-primary btn-xs"     onClick={() => navigate("/checkout")}>Buy Now</button>
-          <label htmlFor="singleproductview" className="btn btn-xs">
+        <div className="card-actions justify-end mt-4 flex-wrap gap-2">
+          <label htmlFor="orderhistoryview" className="btn btn-xs">
             View More..
           </label>
         </div>
       </div>
 
       {/* Modal */}
-      <input type="checkbox" id="singleproductview" className="modal-toggle" />
+      <input type="checkbox" id="orderhistoryview" className="modal-toggle" />
       <div className="modal" role="dialog">
         <div className="modal-box">
-          <h3 className="text-lg font-bold mb-4">{dummyProduct.name}</h3>
+          <h3 className="text-lg font-bold mb-4">{dummyOrder.name}</h3>
           <div className="space-y-3 text-sm">
             <p>
               <span className="font-medium">Code: </span>
-              {dummyProduct.code}
+              {dummyOrder.code}
             </p>
             <p>
               <span className="font-medium">Category: </span>
-              {dummyProduct.category}
+              {dummyOrder.category}
             </p>
             <p>
               <span className="font-medium">Subcategory: </span>
-              {dummyProduct.subCategory}
+              {dummyOrder.subCategory}
             </p>
             <p>
               <span className="font-medium">Make: </span>
-              {dummyProduct.make.join(", ")}
+              {dummyOrder.make.join(", ")}
             </p>
             <p>
               <span className="font-medium">Model: </span>
-              {dummyProduct.model.join(", ")}
+              {dummyOrder.model.join(", ")}
             </p>
             <p>
               <span className="font-medium">Year: </span>
-              {dummyProduct.year.join(", ")}
+              {dummyOrder.year.join(", ")}
             </p>
             <p>
               <span className="font-medium">Condition: </span>
-              {dummyProduct.condition}
+              {dummyOrder.condition}
             </p>
             <p>
               <span className="font-medium">Brand: </span>
-              {dummyProduct.brand}
+              {dummyOrder.brand}
             </p>
             <p>
               <span className="font-medium">OEM/Aftermarket: </span>
-              {dummyProduct.oemAftermarket}
+              {dummyOrder.oemAftermarket}
             </p>
             <p>
               <span className="font-medium">Availability: </span>
               <span
                 className={
-                  dummyProduct.availability === "In Stock"
+                  dummyOrder.availability === "In Stock"
                     ? "text-green-500"
                     : "text-yellow-500"
                 }
               >
-                {dummyProduct.availability}
+                {dummyOrder.availability}
               </span>
             </p>
             <p>
               <span className="font-medium">Material: </span>
-              {dummyProduct.material}
+              {dummyOrder.material}
             </p>
             <p>
               <span className="font-medium">Seller Location: </span>
-              {dummyProduct.sellerLocation}
+              {dummyOrder.sellerLocation}
             </p>
             <p>
-              <span className="font-medium text-lg bg-orange-500 p-3 rounded">Price: ${dummyProduct.price}</span>
+              <span className="font-medium">Purchase Date: </span>
+              {dummyOrder.purchaseDate}
+            </p>
+            <p>
+              <span className="font-medium text-lg">Price: ${dummyOrder.price}</span>
             </p>
           </div>
         </div>
-        <label className="modal-backdrop" htmlFor="singleproductview">
+        <label className="modal-backdrop" htmlFor="orderhistoryview">
           Close
         </label>
       </div>
@@ -151,4 +145,4 @@ const ProductCard = () => {
   );
 };
 
-export default ProductCard;
+export default OrderHistoryCard;

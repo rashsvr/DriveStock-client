@@ -1,19 +1,15 @@
-// components/ThemeToggle.jsx
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 const ThemeToggle = () => {
-  const [darkMode, setDarkMode] = useState(true); // Default to dark mode
+  const [darkMode, setDarkMode] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
 
-  // Load saved theme on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
-    // If there's a saved theme, use it; otherwise, use dark (true)
     setDarkMode(savedTheme ? savedTheme === "dark" : true);
   }, []);
 
-  // Update theme when darkMode changes
   useEffect(() => {
     const theme = darkMode ? "dark" : "light";
     document.documentElement.setAttribute("data-theme", theme);
@@ -29,14 +25,14 @@ const ThemeToggle = () => {
       onClick={handleToggle}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="fixed right-6 bottom-20 z-50 flex h-14 w-14 items-center justify-center rounded-lg bg-dark-bluish-black border-2 border-orange-400 shadow-lg shadow-orange-400/20"
-      animate={{ rotate: darkMode ? 180 : 0, scale: isHovered ? 1.2 : 1.1 }}
+      className="fixed right-6 bottom-20 z-50 flex h-16 w-16 items-center justify-center rounded-xl bg-dark-bluish-black border-2 border-orange-400 shadow-lg shadow-orange-400/20" // Adjusted to match sidebar width
+      animate={{ rotate: darkMode ? 180 : 0, scale: isHovered ? 1.1 : 1 }} // Reduced scale to prevent offset
       transition={{ duration: 0.3 }}
     >
       {darkMode ? (
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          className="h-7 w-7 text-orange-400" 
+          className="h-8 w-8 text-orange-400" 
           fill="none" 
           viewBox="0 0 24 24" 
           stroke="currentColor" 
@@ -51,7 +47,7 @@ const ThemeToggle = () => {
       ) : (
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          className="h-7 w-7 text-orange-400" 
+          className="h-8 w-8 text-orange-400" 
           fill="none" 
           viewBox="0 0 24 24" 
           stroke="currentColor" 

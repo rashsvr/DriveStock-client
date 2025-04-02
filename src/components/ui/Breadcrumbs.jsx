@@ -1,12 +1,11 @@
 import React from 'react'
 
-function Breadcrumbs() {
+function Breadcrumbs({title}) {
   return (
     <div className="breadcrumbs text-sm">
     <ul>
         <li><a>Home</a></li>
-        <li><a>Documents</a></li>
-        <li>Add Document</li>
+        <li><a>{title}</a></li>
     </ul>
 </div>
   )

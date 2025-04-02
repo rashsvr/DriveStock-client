@@ -1,63 +1,78 @@
-import React, { useState } from "react";
+// components/ui/SubLayout.jsx
+import React from "react";
 import Title from "../Title";
-import LoadingAnimation from "../function/loadingAnimation";
-import SearchBar from "./SearchBar";
-import ProductCard from "./ProductCard";
-import Breadcrumbs from "./Breadcrumbs";
-import FilterChips from "./FilterChips";
+import Breadcrumbs from "../ui/Breadcrumbs";
 
-const SubLayout = ({ title, children }) => {
-    const [isProcessing, setIsProcessing] = useState(false);
-
-    const handleProcess = async () => {
-        setIsProcessing(true);
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setIsProcessing(false);
-    };
-
-    return (
-        <div className="relative min-h-screen">
-            {isProcessing && <LoadingAnimation />}
-
-            <div className="grid grid-cols-12 gap-4 px-4 sm:px-6 lg:px-0">
-                {/* Title */}
-                <div className="col-span-12 sm:col-span-6 lg:col-span-2 lg:col-start-2 lg:row-start-2">
-                    <Title text={title} />
-                </div>
-
-                {/* SearchBar */}
-                <div className="col-span-12 sm:col-span-6 lg:col-span-4 lg:col-start-8 lg:row-start-2">
-                    <SearchBar />
-                </div>
-
-                {/* Breadcrumbs */}
-                <div className="col-span-12 lg:col-span-5 lg:col-start-2 lg:row-start-3">
-                    <Breadcrumbs />
-                </div>
-
-                {/* FilterChips (Top) */}
-                <div className="col-span-12 lg:col-span-6 lg:col-start-2 lg:row-start-4">
-                    <FilterChips />
-                </div>
-
-                {/* FilterChips (Secondary) */}
-                <div className="col-span-12 lg:col-span-10 lg:col-start-2 lg:row-start-5">
-                    <FilterChips />
-                </div>
-
-                {/* ProductCard and Children */}
-                <div className="col-span-12 lg:col-span-8 lg:row-span-6 lg:col-start-3 lg:row-start-6">
-                    <ProductCard />
-                    {children}
-                </div>
-
-                {/* Load More */}
-                <div className="col-span-12 lg:col-span-8 lg:col-start-3 lg:row-start-12 text-center underline text-orange-500">
-                    <h1>Load more</h1>
-                </div>
-            </div>
+const SubLayout = ({
+  title,
+  children,
+  showSearch = false,
+  showFilters = false,
+  showSecondaryFilters = false,
+  showLoadMore = false,
+  onLoadMore,
+  isLoading = false,
+  SearchComponent,
+  FilterComponent,
+  SecondaryFilterComponent,
+}) => {
+  return (
+    <div className="relative min-h-screen">
+      <div className="grid grid-cols-12 gap-4 px-4 sm:px-6 lg:px-0">
+        {/* Fixed Title Position */}
+        <div className="col-span-12 sm:col-span-6 lg:col-span-2 lg:col-start-2 lg:row-start-2">
+          <Title text={title} />
         </div>
-    );
+
+        {/* Fixed Breadcrumbs Position */}
+        <div className="col-span-12 lg:col-span-12 lg:col-start-2 lg:row-start-3">
+          <Breadcrumbs title={title} />
+        </div>
+
+        {/* Optional Search Component */}
+        {showSearch && SearchComponent && (
+          <div className="col-span-12 sm:col-span-6 lg:col-span-4 lg:col-start-8 lg:row-start-2">
+            <SearchComponent />
+          </div>
+        )}
+
+        {/* Optional Primary Filters */}
+        {showFilters && FilterComponent && (
+          <div className="col-span-12 lg:col-span-6 lg:col-start-2 lg:row-start-4">
+            <FilterComponent />
+          </div>
+        )}
+
+        {/* Optional Secondary Filters */}
+        {showSecondaryFilters && SecondaryFilterComponent && (
+          <div className="col-span-12 lg:col-span-10 lg:col-start-2 lg:row-start-5">
+            <SecondaryFilterComponent />
+          </div>
+        )}
+
+        {/* Main Content Area */}
+        <div className="col-span-12 lg:col-span-8 lg:row-span-6 lg:col-start-3 lg:row-start-6">
+          {children}
+        </div>
+
+        {/* Optional Load More Button */}
+        {showLoadMore && (
+          <div className="col-span-12 lg:col-span-8 lg:col-start-3 lg:row-start-12 text-center">
+            <button
+              className="btn text-orange-500 underline"
+              onClick={onLoadMore}
+              disabled={isLoading}
+            >
+              {isLoading && (
+                <span className="loading loading-spinner text-orange-500"></span>
+              )}
+              {isLoading ? "Loading..." : "Load More"}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default SubLayout;
