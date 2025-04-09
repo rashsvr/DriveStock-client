@@ -1,24 +1,26 @@
-// components/SearchBar.jsx
+// SearchBar.jsx
 import React, { useState, useEffect, useRef } from "react";
 
-const SearchBar = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+const SearchBar = ({ onSearch, initialSearch }) => {
+  const [searchTerm, setSearchTerm] = useState(initialSearch || "");
   const [suggestions, setSuggestions] = useState([]);
   const [isFocused, setIsFocused] = useState(false);
   const wrapperRef = useRef(null);
 
-  // Sample suggestion data
   const allSuggestions = [
-    "Profile Settings",
-    "Order History",
-    "Product Catalog",
-    "User Preferences",
-    "Payment Methods",
-    "Shipping Details",
-    "Account Overview",
+    "Brake Pads",
+    "Radiator",
+    "Oil Filter",
+    "Air Filter",
+    "Spark Plugs",
+    "Cooling System",
+    "Braking System"
   ];
 
-  // Handle clicking outside to close suggestions
+  useEffect(() => {
+    setSearchTerm(initialSearch || "");
+  }, [initialSearch]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
@@ -29,7 +31,6 @@ const SearchBar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Update suggestions based on search term
   useEffect(() => {
     if (searchTerm.trim() === "") {
       setSuggestions([]);
@@ -37,40 +38,45 @@ const SearchBar = () => {
     }
 
     const filtered = allSuggestions
-      .filter(item => 
-        item.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      .filter(item => item.toLowerCase().includes(searchTerm.toLowerCase()))
       .slice(0, 3);
     setSuggestions(filtered);
   }, [searchTerm]);
 
   const handleSuggestionClick = (suggestion) => {
     setSearchTerm(suggestion);
+    onSearch(suggestion);
     setIsFocused(false);
   };
 
   const handleClear = () => {
     setSearchTerm("");
+    onSearch("");
     setSuggestions([]);
+    setIsFocused(false);
+  };
+
+  const handleSearchSubmit = () => {
+    onSearch(searchTerm);
     setIsFocused(false);
   };
 
   return (
     <div className="relative w-full max-w-md mx-auto p-1" ref={wrapperRef}>
-      {/* Search Input with Clear Button */}
       <div className="join w-full relative">
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onFocus={() => setIsFocused(true)}
-          placeholder="Search..."
-          className="input input-bordered join-item w-full    border-orange-500/30 focus:border-orange-500 focus:outline-none pr-20"
+          onKeyPress={(e) => e.key === "Enter" && handleSearchSubmit()}
+          placeholder="Search products..."
+          className="input input-bordered join-item w-full border-[#F97316]/30 focus:border-[#F97316] focus:outline-none pr-20"
         />
         {searchTerm && (
           <button
             onClick={handleClear}
-            className="absolute right-14 top-1/2 -translate-y-1/2 text-orange-400 hover:text-orange-300 p-2"
+            className="absolute right-14 top-1/2 -translate-y-1/2 text-[#F97316] hover:text-[#F97316]/80 p-2"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -88,7 +94,10 @@ const SearchBar = () => {
             </svg>
           </button>
         )}
-        <button className="btn btn-primary join-item bg-orange-500 hover:bg-orange-600 border-none">
+        <button 
+          onClick={handleSearchSubmit}
+          className="btn join-item bg-[#F97316] hover:bg-[#F97316]/80 border-none text-white"
+        >
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
             className="h-5 w-5" 
@@ -106,15 +115,14 @@ const SearchBar = () => {
         </button>
       </div>
 
-      {/* Floating Suggestions aligned with input */}
       {isFocused && suggestions.length > 0 && (
         <div className="absolute left-6 right-6 mt-2 z-50">
-          <ul className="menu bg-dark-bluish-black/95 backdrop-blur-sm rounded-box shadow-xl border border-orange-500/30 p-2 w-full">
+          <ul className="menu bg-[#1A2526]/95 backdrop-blur-sm rounded-box shadow-xl border border-[#F97316]/30 p-2 w-full">
             {suggestions.map((suggestion, index) => (
               <li key={index}>
                 <button
                   onClick={() => handleSuggestionClick(suggestion)}
-                  className="text-orange-300 hover:bg-orange-500/20 hover:text-orange-200 transition-colors duration-200 w-full text-left py-2 px-4"
+                  className="text-[#F97316] hover:bg-[#F97316]/20 hover:text-[#F97316]/80 transition-colors duration-200 w-full text-left py-2 px-4"
                 >
                   {suggestion}
                 </button>

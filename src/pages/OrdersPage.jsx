@@ -14,10 +14,10 @@ const OrdersPage = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className=" py-6   px-16">
       {isProcessing && <LoadingAnimation />}
       <SubLayout
-        title="Order History"
+        title="OrderHistory"
         showLoadMore={true}
         onLoadMore={handleLoadMore}
         isLoading={isProcessing}

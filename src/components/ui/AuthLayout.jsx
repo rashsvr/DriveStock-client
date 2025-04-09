@@ -6,7 +6,7 @@ import Footer from "./Footer";
 
 function AuthLayout({ title, children, isLoading = false }) {
   return (
-    <div className="min-h-screen bg-base-100 text-base-content transition-colors duration-200 flex flex-col">
+    <div className="min-h-screen  bg-gradient-to-br from-orange-500 from-30% via-dark-bluish-black via-65%  to-dark-bluish-black via-25% text-base-content transition-colors duration-200 flex flex-col">
       {isLoading && <LoadingAnimation />}
       <div className="flex-grow flex items-center justify-center py-12">
         <div className="card w-full max-w-md bg-base-200 shadow-xl">

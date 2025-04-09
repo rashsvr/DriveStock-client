@@ -2,27 +2,31 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import AuthLayout from "../components/ui/AuthLayout";
+import Alert from "../components/ui/Alert"; // Import the new Alert component
+import api from "../services/api";
 
 function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // New state for password visibility
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     confirmPassword: "",
-    role: "buyer", // Default to buyer as requested
+    role: "buyer",
     name: "",
     phone: "",
   });
   const [errors, setErrors] = useState({});
+  const [alert, setAlert] = useState(null); // State for showing alerts
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
+    setAlert(null); // Clear alert on input change
   };
 
   const validateStep = () => {
@@ -46,19 +50,41 @@ function Register() {
 
   const handleNext = async (e) => {
     e.preventDefault();
-    if (!validateStep()) return;
+    if (!validateStep()) {
+      setAlert({ type: "error", message: "Please correct the errors in the form." });
+      return;
+    }
 
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     } else {
       setIsLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setIsLoading(false);
-      setShowSuccess(true);
+      try {
+        const response = await api.register({
+          email: formData.email,
+          password: formData.password,
+          role: formData.role,
+          name: formData.name,
+          phone: formData.phone,
+        });
+        if (response.success) {
+          localStorage.setItem('token', response.data.token);
+          localStorage.setItem('user', JSON.stringify({ userId: response.data.userId }));
+          setShowSuccess(true);
+        }
+      } catch (err) {
+        const { message, code, isBigError } = err;
+        if (isBigError) {
+          navigate('/error', { state: { message, code } }); // Redirect for big errors
+        } else {
+          setAlert({ type: "error", message }); // Show alert for small errors
+        }
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
-  // Handle step click
   const handleStepClick = (step) => {
     if (step <= currentStep) {
       setCurrentStep(step);
@@ -68,210 +94,174 @@ function Register() {
   useEffect(() => {
     if (showSuccess) {
       const timer = setTimeout(() => {
-        navigate("/Login");
+        navigate("/");
       }, 2000);
       return () => clearTimeout(timer);
     }
   }, [showSuccess, navigate]);
 
-  const alertVariants = {
-    hidden: { opacity: 0, y: -20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeInOut" } },
-  };
-
   return (
     <AuthLayout title="Register" isLoading={isLoading}>
-      {/* Stepper - Made clickable */}
-      <ul className="steps w-full mb-6">
-        <li
-          className={`step ${currentStep >= 1 ? "step-accent cursor-pointer" : "cursor-not-allowed"}`}
-          data-content={currentStep > 1 ? "✓" : "1"}
-          onClick={() => handleStepClick(1)}
-        >
-          User Details
-        </li>
-        <li
-          className={`step ${currentStep >= 2 ? "step-accent cursor-pointer" : "cursor-not-allowed"}`}
-          data-content={currentStep > 2 ? "✓" : "2"}
-          onClick={() => handleStepClick(2)}
-        >
-          Password
-        </li>
-        <li
-          className={`step ${currentStep >= 3 ? "step-accent cursor-pointer" : "cursor-not-allowed"}`}
-          data-content="3"
-          onClick={() => handleStepClick(3)}
-        >
-          Complete
-        </li>
-      </ul>
-
+      {alert && <Alert type={alert.type} message={alert.message} onClose={() => setAlert(null)} />}
       {showSuccess && (
-        <motion.div
-          role="alert"
-          className="alert alert-success"
-          variants={alertVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 shrink-0 stroke-current"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span>Registration successful! Redirecting to login...</span>
-        </motion.div>
+        <Alert type="success" message="Registration successful! Redirecting to home..." />
       )}
-
       {!showSuccess && (
-        <form className="space-y-4" onSubmit={handleNext}>
-          {currentStep === 1 && (
-            <>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Email</span>
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="Enter your email"
-                  className="input input-bordered w-full"
-                  required
-                />
-                {errors.email && <span className="text-error text-sm">{errors.email}</span>}
-              </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Name</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter your name"
-                  className="input input-bordered w-full"
-                  required
-                />
-                {errors.name && <span className="text-error text-sm">{errors.name}</span>}
-              </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Phone</span>
-                </label>
-                <input
-                  type="text"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  placeholder="Enter your phone (e.g., +1234567890)"
-                  className="input input-bordered w-full"
-                  required
-                />
-                {errors.phone && <span className="text-error text-sm">{errors.phone}</span>}
-              </div>
-              {/* Role field is hidden but kept in formData with default "buyer" */}
-            </>
-          )}
-
-          {currentStep === 2 && (
-            <>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Password</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder="Enter your password"
-                    className="input input-bordered w-full"
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-sm"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? "Hide" : "Show"}
-                  </button>
-                </div>
-                {errors.password && <span className="text-error text-sm">{errors.password}</span>}
-              </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Confirm Password</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    placeholder="Confirm your password"
-                    className="input input-bordered w-full"
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-sm"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? "Hide" : "Show"}
-                  </button>
-                </div>
-                {errors.confirmPassword && (
-                  <span className="text-error text-sm">{errors.confirmPassword}</span>
-                )}
-              </div>
-            </>
-          )}
-
-          {currentStep === 3 && (
-            <div className="space-y-2">
-              <p>
-                <strong>Email:</strong> {formData.email}
-              </p>
-              <p>
-                <strong>Name:</strong> {formData.name}
-              </p>
-              <p>
-                <strong>Phone:</strong> {formData.phone}
-              </p>              
-            </div>
-          )}
-
-          <div className="text-center">
-            <button
-              type="submit"
-              className="btn bg-orange-500 text-white hover:bg-orange-600 w-full"
-              disabled={isLoading}
+        <>
+          <ul className="steps w-full mb-6">
+            <li
+              className={`step ${currentStep >= 1 ? "step-accent cursor-pointer" : "cursor-not-allowed"}`}
+              data-content={currentStep > 1 ? "✓" : "1"}
+              onClick={() => handleStepClick(1)}
             >
-              {isLoading ? (
-                <>
-                  <span className="loading loading-spinner"></span>
-                  Processing...
-                </>
-              ) : currentStep < 3 ? (
-                "Next"
-              ) : (
-                "Register"
-              )}
-            </button>
-          </div>
-        </form>
+              User Details
+            </li>
+            <li
+              className={`step ${currentStep >= 2 ? "step-accent cursor-pointer" : "cursor-not-allowed"}`}
+              data-content={currentStep > 2 ? "✓" : "2"}
+              onClick={() => handleStepClick(2)}
+            >
+              Password
+            </li>
+            <li
+              className={`step ${currentStep >= 3 ? "step-accent cursor-pointer" : "cursor-not-allowed"}`}
+              data-content="3"
+              onClick={() => handleStepClick(3)}
+            >
+              Complete
+            </li>
+          </ul>
+          <form className="space-y-4" onSubmit={handleNext}>
+            {currentStep === 1 && (
+              <>
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Email</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="Enter your email"
+                    className="input input-bordered w-full"
+                    required
+                  />
+                  {errors.email && <span className="text-error text-sm">{errors.email}</span>}
+                </div>
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Name</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Enter your name"
+                    className="input input-bordered w-full"
+                    required
+                  />
+                  {errors.name && <span className="text-error text-sm">{errors.name}</span>}
+                </div>
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Phone</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder="Enter your phone (e.g., +1234567890)"
+                    className="input input-bordered w-full"
+                    required
+                  />
+                  {errors.phone && <span className="text-error text-sm">{errors.phone}</span>}
+                </div>
+              </>
+            )}
+            {currentStep === 2 && (
+              <>
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Password</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder="Enter your password"
+                      className="input input-bordered w-full"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-sm"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  {errors.password && <span className="text-error text-sm">{errors.password}</span>}
+                </div>
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Confirm Password</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      placeholder="Confirm your password"
+                      className="input input-bordered w-full"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-sm"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && (
+                    <span className="text-error text-sm">{errors.confirmPassword}</span>
+                  )}
+                </div>
+              </>
+            )}
+            {currentStep === 3 && (
+              <div className="space-y-2">
+                <p><strong>Email:</strong> {formData.email}</p>
+                <p><strong>Name:</strong> {formData.name}</p>
+                <p><strong>Phone:</strong> {formData.phone}</p>
+              </div>
+            )}
+            <div className="text-center">
+              <button
+                type="submit"
+                className="btn bg-orange-500 text-white hover:bg-orange-600 w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="loading loading-spinner"></span>
+                    Processing...
+                  </>
+                ) : currentStep < 3 ? (
+                  "Next"
+                ) : (
+                  "Register"
+                )}
+              </button>
+            </div>
+          </form>
+        </>
       )}
     </AuthLayout>
   );

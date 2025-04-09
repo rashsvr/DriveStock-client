@@ -1,9 +1,10 @@
+// components/ThemeToggle.jsx
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 const ThemeToggle = () => {
   const [darkMode, setDarkMode] = useState(true);
-  const [isHovered, setIsHovered] = useState(false);
+  const [isHovered, setIsHovered] = useState(false); 
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -25,15 +26,22 @@ const ThemeToggle = () => {
       onClick={handleToggle}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="fixed right-6 bottom-20 z-50 flex h-16 w-16 items-center justify-center rounded-xl bg-dark-bluish-black border-2 border-orange-400 shadow-lg shadow-orange-400/20" // Adjusted to match sidebar width
-      animate={{ rotate: darkMode ? 180 : 0, scale: isHovered ? 1.1 : 1 }} // Reduced scale to prevent offset
+      className={`fixed right-6 bottom-20 z-50 flex items-center justify-center rounded-xl   shadow-xl shadow-orange-500/20 ${
+        darkMode ? "bg-highlight-orange" : "bg-dark-bluish-black  "
+      }`}
+      animate={{ 
+        width: ['xs', 'sm'].includes(window.innerWidth < 640 ? 'xs' : 'sm') ? 56 : 64,
+        height: ['xs', 'sm'].includes(window.innerWidth < 640 ? 'xs' : 'sm') ? 56 : 64,
+        rotate: darkMode ? 180 : 0, 
+        scale: isHovered ? 1.1 : 1 
+      }}
       transition={{ duration: 0.3 }}
     >
       {darkMode ? (
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          className="h-8 w-8 text-orange-400" 
-          fill="none" 
+          className="h-8 w-8 text-white" 
+          fill=" none" 
           viewBox="0 0 24 24" 
           stroke="currentColor" 
           strokeWidth="1.5"
@@ -47,7 +55,7 @@ const ThemeToggle = () => {
       ) : (
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          className="h-8 w-8 text-orange-400" 
+          className="h-8 w-8 text-highlight-orange " 
           fill="none" 
           viewBox="0 0 24 24" 
           stroke="currentColor" 
