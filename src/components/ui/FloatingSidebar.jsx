@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import ProfileContent from "./ProfileContent";
-import CartContent from "./CartContent";
+import CartContent from "./CartContent"; 
+import api from "../../services/api";
 
 const FloatingSidebar = ({ onCartClick }) => {
   const navigate = useNavigate();
   const [activeIcon, setActiveIcon] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const [shake, setShake] = useState(false);
 
   const icons = [
     {
@@ -65,15 +67,34 @@ const FloatingSidebar = ({ onCartClick }) => {
   const collapsedHeight = baseHeight + (iconCount * iconHeight * 0.93);
   const expandedHeight = baseHeight + (iconCount * iconHeight * 0.95);
 
+  useEffect(() => {
+    const updateCartCount = async () => {
+      try {
+        const response = await api.viewCart();
+        setCartCount(response.data.items?.length || 0);
+      } catch (err) {
+        setCartCount(0);
+      }
+    };
+    if (api.isAuthenticated()) {
+      updateCartCount();
+    }
+  }, [isCartOpen]);
+
   const handleIconClick = (item) => {
     if (item.id === "cart") {
-      const canOpenCart = onCartClick(); // Call the parent's callback
+      const canOpenCart = onCartClick();
       if (canOpenCart) {
         setIsCartOpen(!isCartOpen);
       }
     } else if (item.path) {
       navigate(item.path);
     }
+  };
+
+  const triggerShake = () => {
+    setShake(true);
+    setTimeout(() => setShake(false), 500);
   };
 
   return (
@@ -97,6 +118,10 @@ const FloatingSidebar = ({ onCartClick }) => {
             onHoverStart={() => setActiveIcon(item.id)}
             onHoverEnd={() => setActiveIcon(null)}
             onClick={() => handleIconClick(item)}
+            animate={item.id === "cart" && shake ? {
+              rotate: [0, 10, -10, 10, -10, 0],
+              transition: { duration: 0.4 }
+            } : {}}
           >
             <motion.div
               className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-3 py-1 bg-gray-800 text-orange-500 text-xs rounded-md shadow-md border border-orange-500/30 z-50 hidden sm:block"
@@ -119,6 +144,11 @@ const FloatingSidebar = ({ onCartClick }) => {
               }}
               transition={{ duration: 0.15, ease: "easeInOut" }}
             >
+              {item.id === "cart" && cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
               {item.icon}
             </motion.div>
           </motion.div>
@@ -132,7 +162,11 @@ const FloatingSidebar = ({ onCartClick }) => {
         animate={{ x: isCartOpen ? 0 : "100%" }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
-        <CartContent onClose={() => setIsCartOpen(false)} />
+        <CartContent 
+          onClose={() => setIsCartOpen(false)} 
+          isOpen={isCartOpen}
+          triggerShake={triggerShake}
+        />
       </motion.div>
     </>
   );

@@ -1,4 +1,4 @@
-import React from "react"; 
+import React from "react";
 import CartItem from "./CartIteam";
 
 function CartGrid({ items, onRemove, onQuantityChange }) {
@@ -6,7 +6,7 @@ function CartGrid({ items, onRemove, onQuantityChange }) {
     <div className="w-full space-y-2">
       {items.map((item) => (
         <CartItem
-          key={item.id}
+          key={item._id}
           item={item}
           onRemove={onRemove}
           onQuantityChange={onQuantityChange}

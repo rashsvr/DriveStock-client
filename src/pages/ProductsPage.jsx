@@ -7,7 +7,7 @@ import FilterChips from "../components/ui/FilterChips";
 import api from "../services/api";
 import { useNavigate } from "react-router-dom";
 
-const ProductsPage = () => {
+const ProductsPage = ({ onCartShake }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
@@ -77,12 +77,8 @@ const ProductsPage = () => {
     setPage(1);
   };
 
-  const handleBuyNow = (productId) => {
-    navigate(`/checkout?productId=${productId}`);
-  };
-
   return (
-    <div className="py-6 px-16">
+    <div className="py-6 px-4 sm:px-16">
       {isProcessing && <LoadingAnimation />}
       <SubLayout
         title="Products"
@@ -133,7 +129,15 @@ const ProductsPage = () => {
             </button>
           </div>
         ) : (
-          <ProductGrid products={products} onBuyNow={handleBuyNow} />
+          <ProductGrid
+            products={products}
+            onCartShake={onCartShake}
+            onBuyNow={(productId, quantity) => {
+              api.addToCart(productId, quantity)
+                .then(() => navigate(`/checkout?productId=${productId}`))
+                .catch((err) => alert(err.message || "Failed to add to cart."));
+            }}
+          />
         )}
       </SubLayout>
     </div>

@@ -1,110 +1,139 @@
-import React, { useState } from "react";
-import CartGrid from "./CartGrid";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import CartGrid from "./CartGrid"; 
+import api from "../../services/api";
 
-function CartContent({ onClose }) {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "Toyota Corolla Brake Pads",
-      make: ["Toyota"],
-      price: 80,
-      brand: "Bosch",
-    },
-    {
-      id: 2,
-      name: "Honda Civic Air Filter",
-      make: ["Honda"],
-      price: 25,
-      brand: "K&N",
-    },
-    {
-      id: 3,
-      name: "Ford Focus Spark Plugs",
-      make: ["Ford"],
-      price: 15,
-      brand: "NGK",
-    },
-    {
-      id: 4,
-      name: "BMW X5 Oil Filter",
-      make: ["BMW"],
-      price: 30,
-      brand: "Mann",
-    },
-    {
-      id: 5,
-      name: "Audi A4 Brake Discs",
-      make: ["Audi"],
-      price: 120,
-      brand: "Brembo",
-    },
-    {
-      id: 6,
-      name: "Mercedes C-Class Wiper Blades",
-      make: ["Mercedes"],
-      price: 40,
-      brand: "Bosch",
-    },
-  ]);
+function CartContent({ onClose, isOpen, triggerShake }) {
+  const [cart, setCart] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  const handleRemoveItem = (itemId) => {
-    setCartItems(cartItems.filter((item) => item.id !== itemId));
+  const fetchCart = async () => {
+    setIsLoading(true);
+    try {
+      const response = await api.viewCart();
+      setCart(response.data);
+    } catch (err) {
+      setError(err.message || "Failed to load cart.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleQuantityChange = (itemId, newQuantity) => {
-    setCartItems(
-      cartItems.map((item) =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
-      )
-    );
+  useEffect(() => {
+    if (isOpen) {
+      fetchCart();
+    }
+  }, [isOpen]);
+
+  const handleRemoveItem = async (productId) => {
+    setIsLoading(true);
+    try {
+      await api.removeFromCart(productId);
+      await fetchCart();
+      triggerShake();
+    } catch (err) {
+      setError(err.message || "Failed to remove item.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleQuantityChange = async (productId, newQuantity) => {
+    setIsLoading(true);
+    try {
+      await api.updateCartItem(productId, newQuantity);
+      await fetchCart();
+      triggerShake();
+    } catch (err) {
+      if (err.message.includes("stock")) {
+        alert(err.message);
+      } else {
+        setError(err.message || "Failed to update quantity.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCheckout = () => {
+    navigate("/checkout");
+    onClose();
   };
 
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-4 sm:p-6 border-b border-base-200 bg-base-100">
-        <h2 className="text-lg sm:text-xl font-bold  text-highlight-orange">
+        <h2 className="text-lg sm:text-xl font-bold text-highlight-orange">
           Shopping Cart
         </h2>
         <button
-          className="btn btn-ghost   text-highlight-orange text-xl"
+          className="btn btn-ghost text-highlight-orange text-xl"
           onClick={onClose}
+          disabled={isLoading}
         >
           ✕
         </button>
       </div>
 
       {/* Scrollable Cart Items Area */}
-      <div
-        className="flex-1 overflow-y-auto"
-        style={{ maxHeight: "calc(6 * 6rem)" }}
-      >
-        {cartItems.length > 0 ? (
+      <div className="flex-1 overflow-y-auto" style={{ maxHeight: "calc(6 * 6rem)" }}>
+        {isLoading && (
+          <div className="flex justify-center py-4">
+            <span className="loading loading-spinner"></span>
+          </div>
+        )}
+        {error && (
+          <div role="alert" className="alert alert-error m-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 shrink-0 stroke-current"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span>{error}</span>
+          </div>
+        )}
+        {cart && cart.items?.length > 0 ? (
           <CartGrid
-            items={cartItems}
+            items={cart.items}
             onRemove={handleRemoveItem}
             onQuantityChange={handleQuantityChange}
           />
         ) : (
-          <p className="text-center text-base-content/50 py-8">
-            Your cart is empty
-          </p>
+          !isLoading && (
+            <p className="text-center text-base-content/50 py-8">
+              Your cart is empty
+            </p>
+          )
         )}
       </div>
 
       {/* Footer with Total */}
-      {cartItems.length > 0 && (
+      {cart && cart.items?.length > 0 && (
         <div className="p-4 sm:p-6 border-t border-base-200 bg-base-100">
           <div className="flex justify-between items-center">
             <span className="font-medium text-base-content">Total:</span>
             <span className="font-bold text-lg text-base-content">
-              $
-              {cartItems
-                .reduce((sum, item) => sum + item.price * (item.quantity || 1), 0)
-                .toFixed(2)}
+              ${cart.total?.toFixed(2) || 0}
             </span>
           </div>
-          <button className="btn bg-highlight-orange rounded-lg w-full mt-4">Checkout</button>
+          <button
+            className="btn bg-highlight-orange rounded-lg w-full mt-4"
+            onClick={handleCheckout}
+            disabled={isLoading}
+          >
+            Checkout
+          </button>
         </div>
       )}
     </div>

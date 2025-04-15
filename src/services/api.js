@@ -108,6 +108,8 @@ export const getProductById = async (productId) => {
 
 export const addToCart = async (productId, quantity = 1) => {
   if (!isAuthenticated()) throw { message: 'User must be logged in to add to cart', code: 401, isBigError: false };
+  const product = await getProductById(productId);
+  if (quantity > product.data.stock) throw { message: `Only ${product.data.stock} items in stock`, code: 400, isBigError: false };
   const response = await apiClient.post('/buyer/cart/add', { productId, quantity });
   return response.data;
 };
@@ -120,6 +122,8 @@ export const viewCart = async () => {
 
 export const updateCartItem = async (productId, quantity) => {
   if (!isAuthenticated()) throw { message: 'User must be logged in to update cart', code: 401, isBigError: false };
+  const product = await getProductById(productId);
+  if (quantity > product.data.stock) throw { message: `Only ${product.data.stock} items in stock`, code: 400, isBigError: false };
   const response = await apiClient.post('/buyer/cart/update', { productId, quantity });
   return response.data;
 };
@@ -150,13 +154,11 @@ export const cancelOrder = async (orderId) => {
 
 export const trackOrder = async (orderId, productId) => {
   if (!isAuthenticated()) throw { message: 'User must be logged in to track an order', code: 401, isBigError: false };
-  console.log('trackOrder:', { orderId, productId }); // Debug
   if (!productId) throw { message: 'productId is required', code: 400, isBigError: false };
   try {
     const response = await apiClient.post(`/buyer/order/track/${orderId}`, { productId });
     return response.data;
   } catch (error) {
-    console.error('trackOrder error:', error);
     if (error.code === 404) {
       const response = await apiClient.get(`/buyer/order/track/${orderId}`, {
         params: { productId }
