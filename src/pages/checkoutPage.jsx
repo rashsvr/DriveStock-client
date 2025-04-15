@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import LoadingAnimation from "../components/function/loadingAnimation";
 import SubLayout from "../components/ui/SubLayout";
+import OrderProductCard from "../components/ui/OrderProductCard";
 
 const CheckoutPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -155,30 +156,7 @@ const CheckoutPage = () => {
                 <div className="divider"></div>
 
                 {/* Product Details */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-24 h-24 object-cover rounded"
-                    />
-                    <div>
-                      <h3 className="text-lg font-semibold">{product.name}</h3>
-                      <p className="text-gray-600">{product.description}</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <strong>Price:</strong> ${product.price.toFixed(2)}
-                    </div>
-                    <div>
-                      <strong>Quantity:</strong> {product.quantity}
-                    </div>
-                    <div className="col-span-2">
-                      <strong>Subtotal:</strong> ${(product.price * product.quantity).toFixed(2)}
-                    </div>
-                  </div>
-                </div>
+                <OrderProductCard {...product} />
 
                 <div className="divider"></div>
 

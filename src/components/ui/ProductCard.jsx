@@ -1,12 +1,23 @@
-// ProductCard.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../../services/api";
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, onBuyNow }) => {
     const navigate = useNavigate();
 
-    const handleAddToCart = () => {
-        console.log(`Added ${product.title} to cart`);
+    const handleAddToCart = async () => {
+        try {
+            const response = await api.addToCart(product._id, 1);
+            alert(`${product.title} added to cart!`);
+            return response.data;
+        } catch (err) {
+            alert(err.message || "Failed to add to cart.");
+            throw err;
+        }
+    };
+
+    const handleBuyNow = () => {
+        onBuyNow(product._id);
     };
 
     return (
@@ -18,7 +29,6 @@ const ProductCard = ({ product }) => {
                     className="object-cover w-full h-full"
                 />
             </figure>
-
             <div className="card-body p-4">
                 <div className="flex items-start gap-2">
                     <h2 className="card-title text-base font-semibold truncate flex-1">
@@ -28,10 +38,9 @@ const ProductCard = ({ product }) => {
                         <div className="badge badge-secondary badge-sm flex-shrink-0">NEW</div>
                     )}
                 </div>
-
                 <div className="space-y-2 text-sm">
                     <p>
-                        <span className="font-medium">{product.make?.join(", ") || "N/A"}</span>
+                        <span className="font-medium">{product.makeModel?.[0]?.make || product.brand || "Unknown"}</span>
                     </p>
                     <p>
                         <span className="font-medium">Availability: </span>
@@ -49,12 +58,11 @@ const ProductCard = ({ product }) => {
                         <span className="font-semibold text-lg">${product.price}</span>
                     </p>
                 </div>
-
                 <div className="card-actions mt-4 space-y-2">
                     <div className="flex gap-2">
                         <button 
                             className="btn btn-sm bg-orange-500 hover:bg-orange-600 text-white flex-1"
-                            onClick={() => navigate("/checkout")}
+                            onClick={handleBuyNow}
                         >
                             Buy Now
                         </button>
@@ -86,20 +94,18 @@ const ProductCard = ({ product }) => {
                     </label>
                 </div>
             </div>
-
             <input type="checkbox" id={`product-${product._id}`} className="modal-toggle" />
             <div className="modal" role="dialog">
                 <div className="modal-box w-11/12 max-w-2xl">
                     <h3 className="text-lg font-bold mb-4">{product.title}</h3>
                     <div className="space-y-3 text-sm grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <p><span className="font-medium">Code: </span>{product.code || "N/A"}</p>
-                        <p><span className="font-medium">Category: </span>{product.category?.name || "N/A"}</p>
-                        <p><span className="font-medium">Description: </span>{product.description || "N/A"}</p>
-                        <p><span className="font-medium">Make: </span>{product.make?.join(", ") || "N/A"}</p>
-                        <p><span className="font-medium">Model: </span>{product.model?.join(", ") || "N/A"}</p>
-                        <p><span className="font-medium">Year: </span>{product.years?.join(", ") || "N/A"}</p>
-                        <p><span className="font-medium">Condition: </span>{product.condition}</p>
-                        <p><span className="font-medium">Brand: </span>{product.brand}</p>
+                        <p><span className="font-medium">Description: </span>{product.description || "Unknown"}</p>
+                        <p><span className="font-medium">Category: </span>{product.category?.name || "Unknown"}</p>
+                        <p><span className="font-medium">Make: </span>{product.makeModel?.[0]?.make || "Unknown"}</p>
+                        <p><span className="font-medium">Model: </span>{product.makeModel?.[0]?.model || "Unknown"}</p>
+                        <p><span className="font-medium">Year: </span>{product.years?.join(", ") || "Unknown"}</p>
+                        <p><span className="font-medium">Condition: </span>{product.condition || "Unknown"}</p>
+                        <p><span className="font-medium">Brand: </span>{product.brand || "Unknown"}</p>
                         <p><span className="font-medium">OEM/Aftermarket: </span>{product.aftermarket ? "Aftermarket" : "OEM"}</p>
                         <p>
                             <span className="font-medium">Availability: </span>
@@ -110,11 +116,10 @@ const ProductCard = ({ product }) => {
                                         : "text-yellow-500"
                                 }
                             >
-                                {product.availability}
+                                {product.availability || "Unknown"}
                             </span>
                         </p>
-                        <p><span className="font-medium">Material: </span>{product.material || "N/A"}</p>
-                        <p><span className="font-medium">Seller Location: </span>{product.sellerLocation || "N/A"}</p>
+                        <p><span className="font-medium">Material: </span>{product.material || "Unknown"}</p>
                         <p className="col-span-full">
                             <span className="font-medium text-lg bg-orange-500 p-3 rounded inline-block">
                                 Price: ${product.price}

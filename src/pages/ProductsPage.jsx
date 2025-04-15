@@ -1,11 +1,11 @@
-// ProductsPage.jsx
 import React, { useState, useEffect } from "react";
 import LoadingAnimation from "../components/function/loadingAnimation";
 import SubLayout from "../components/ui/SubLayout";
 import ProductGrid from "../components/ui/ProductGrid";
 import SearchBar from "../components/ui/SearchBar";
 import FilterChips from "../components/ui/FilterChips";
-import { dummyProducts } from "../data/dummyProducts";
+import api from "../services/api";
+import { useNavigate } from "react-router-dom";
 
 const ProductsPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -15,46 +15,48 @@ const ProductsPage = () => {
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
-
   const limit = 10;
+  const navigate = useNavigate();
 
   const fetchProducts = async (isLoadMore = false) => {
     setIsProcessing(true);
     setError(null);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      let filteredProducts = [...dummyProducts];
+      let response;
       
-      if (searchTerm) {
-        filteredProducts = filteredProducts.filter(p => 
-          p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.category.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+      if (Object.keys(filters).length > 0 || searchTerm) {
+        // Use searchProducts when filters or search term exists
+        const searchFilters = { ...filters };
+        if (searchTerm) searchFilters.keyword = searchTerm;
+        response = await api.searchProducts(searchFilters);
+      } else {
+        // Use getAllProducts for initial load without filters
+        response = await api.getAllProducts(page, limit);
       }
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value && value !== "All") {
-          if (key === "years") {
-            filteredProducts = filteredProducts.filter(p => 
-              p.years.some(year => value.includes(year.toString()))
-            );
-          } else if (Array.isArray(value)) {
-            filteredProducts = filteredProducts.filter(p => 
-              value.some(v => p[key].includes(v))
-            );
-          } else {
-            filteredProducts = filteredProducts.filter(p => 
-              p[key].toString().toLowerCase() === value.toLowerCase()
-            );
-          }
-        }
-      });
 
-      const start = (page - 1) * limit;
-      const paginated = filteredProducts.slice(start, start + limit);
-      setProducts(isLoadMore ? [...products, ...paginated] : paginated);
-      setTotal(filteredProducts.length);
+      // Process images
+      const processedProducts = await Promise.all(
+        response.data.map(async (product) => {
+          const images = await Promise.all(
+            product.images.map(async (img) => {
+              try {
+                // Extract the image ID from the URL
+                const imageId = img.split('/').pop();
+                return await api.getImage(`/uploads/${imageId}`);
+              } catch (err) {
+                console.error("Error loading image:", err);
+                return "https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp";
+              }
+            })
+          );
+          return { ...product, images };
+        })
+      );
+
+      setProducts(isLoadMore ? [...products, ...processedProducts] : processedProducts);
+      setTotal(response.total || processedProducts.length);
     } catch (err) {
-      setError("Failed to load products. Please try again.");
+      setError(err.message || "Failed to load products. Please try again.");
       setProducts([]);
     } finally {
       setIsProcessing(false);
@@ -67,13 +69,13 @@ const ProductsPage = () => {
 
   const handleLoadMore = () => {
     setPage(prev => prev + 1);
-    fetchProducts(true);
   };
 
   const handleSearch = (term) => {
     setSearchTerm(term);
     setPage(1);
   };
+
   const handleFilterChange = (newFilters) => {
     setFilters(prev => ({
       ...prev,
@@ -88,29 +90,39 @@ const ProductsPage = () => {
     setPage(1);
   };
 
+  const handleBuyNow = (productId) => {
+    navigate(`/checkout?productId=${productId}`);
+  };
+
   return (
     <div className="py-6 px-16">
-    {isProcessing && <LoadingAnimation />}
-    <SubLayout
-      title="Products"
-      showSearch={true}
-      showFilters={true}
-      showSecondaryFilters={false}
-      showLoadMore={total > products.length}
-      onLoadMore={handleLoadMore}
-      isLoading={isProcessing}
-      SearchComponent={() => <SearchBar onSearch={handleSearch} initialSearch={searchTerm} />}
-      FilterComponent={() => (
-        <FilterChips 
-          onFilterChange={handleFilterChange} 
-          onClearAll={handleClearAll}
-          hasActiveFilters={Object.values(filters).some(val => val && val !== "All") || searchTerm}
-        />
-      )}
-    >
+      {isProcessing && <LoadingAnimation />}
+      <SubLayout
+        title="Products"
+        showSearch={true}
+        showFilters={true}
+        showSecondaryFilters={false}
+        showLoadMore={total > products.length && !(Object.keys(filters).length > 0 || searchTerm)}
+        onLoadMore={handleLoadMore}
+        isLoading={isProcessing}
+        SearchComponent={() => (
+          <SearchBar onSearch={handleSearch} initialSearch={searchTerm} />
+        )}
+        FilterComponent={() => (
+          <FilterChips 
+            onFilterChange={handleFilterChange} 
+            onClearAll={handleClearAll}
+            hasActiveFilters={
+              Object.values(filters).some(val => val && val !== "All") || searchTerm
+            }
+          />
+        )}
+      >
         {error ? (
           <div className="alert alert-error">
-            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
             <span>{error}</span>
           </div>
         ) : products.length === 0 && !isProcessing ? (
@@ -124,7 +136,7 @@ const ProductsPage = () => {
             </button>
           </div>
         ) : (
-          <ProductGrid products={products} />
+          <ProductGrid products={products} onBuyNow={handleBuyNow} />
         )}
       </SubLayout>
     </div>

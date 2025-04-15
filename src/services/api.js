@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-// Base URL for your API
 const API_BASE_URL = 'http://localhost:3000/api';
 
-// Create an axios instance with default config
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -11,7 +9,6 @@ const apiClient = axios.create({
   },
 });
 
-// Add a request interceptor to include the JWT token
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -20,7 +17,6 @@ apiClient.interceptors.request.use((config) => {
   return config;
 }, (error) => Promise.reject(error));
 
-// Add a response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -29,10 +25,9 @@ apiClient.interceptors.response.use(
     let code = 500;
     let isBigError = false;
 
-    // Big Errors: Redirect to ErrorPage
     if (!navigator.onLine) {
       message = 'No internet connection. Please check your network.';
-      code = 0; // Custom code for no internet
+      code = 0;
       isBigError = true;
     } else if (status === 400 && !error.response?.data?.message) {
       message = 'Bad request. Something went wrong with the system.';
@@ -42,9 +37,7 @@ apiClient.interceptors.response.use(
       message = 'Internal server error. Please try again later.';
       code = 500;
       isBigError = true;
-    }
-    // Small Errors: Handle in UI
-    else if (status === 400) {
+    } else if (status === 400) {
       message = error.response?.data?.message || 'Invalid request. Please check your input.';
       code = 400;
     } else if (status === 401) {
@@ -60,25 +53,21 @@ apiClient.interceptors.response.use(
       code = 409;
     }
 
-    // Throw error with type indicator
     throw { message, code, isBigError, originalError: error };
   }
 );
 
-// Check if user is authenticated
 export const isAuthenticated = () => {
   const token = localStorage.getItem('token');
   return !!token;
 };
 
-// Logout function
 export const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
   window.location.href = '/login';
 };
 
-// Auth API Calls
 export const login = async (email, password) => {
   const response = await apiClient.post('/auth/login', { email, password });
   return response.data;
@@ -89,14 +78,27 @@ export const register = async (userData) => {
   return response.data;
 };
 
-// Buyer Product Exploration API Calls (No authentication required)
 export const getAllProducts = async (page = 1, limit = 10) => {
   const response = await apiClient.get('/buyer/products', { params: { page, limit } });
   return response.data;
 };
 
+export const getProductFilterOptions = async () => {
+  const response = await apiClient.get('/buyer/product-filter-options');
+  return response.data;
+};
+
 export const searchProducts = async (filters) => {
-  const response = await apiClient.get('/buyer/products/search', { params: filters });
+  const processedFilters = {};
+  Object.entries(filters).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      processedFilters[key] = value.join(',');
+    } else {
+      processedFilters[key] = value;
+    }
+  });
+  
+  const response = await apiClient.get('/buyer/products/search', { params: processedFilters });
   return response.data;
 };
 
@@ -105,8 +107,7 @@ export const getProductById = async (productId) => {
   return response.data;
 };
 
-// Buyer Cart API Calls (Requires authentication)
-export const addToCart = async (productId, quantity) => {
+export const addToCart = async (productId, quantity = 1) => {
   if (!isAuthenticated()) throw { message: 'User must be logged in to add to cart', code: 401, isBigError: false };
   const response = await apiClient.post('/buyer/cart/add', { productId, quantity });
   return response.data;
@@ -115,6 +116,12 @@ export const addToCart = async (productId, quantity) => {
 export const viewCart = async () => {
   if (!isAuthenticated()) throw { message: 'User must be logged in to view cart', code: 401, isBigError: false };
   const response = await apiClient.get('/buyer/cart');
+  return response.data;
+};
+
+export const updateCartItem = async (productId, quantity) => {
+  if (!isAuthenticated()) throw { message: 'User must be logged in to update cart', code: 401, isBigError: false };
+  const response = await apiClient.post('/buyer/cart/update', { productId, quantity });
   return response.data;
 };
 
@@ -130,7 +137,6 @@ export const clearCart = async () => {
   return response.data;
 };
 
-// Buyer Order API Calls (Requires authentication)
 export const createOrder = async (orderData) => {
   if (!isAuthenticated()) throw { message: 'User must be logged in to create an order', code: 401, isBigError: false };
   const response = await apiClient.post('/buyer/order', orderData);
@@ -155,20 +161,24 @@ export const getOrderHistory = async () => {
   return response.data;
 };
 
-// Profile Management API Calls (Requires authentication)
 export const getProfile = async () => {
   if (!isAuthenticated()) throw { message: 'User must be logged in to view profile', code: 401, isBigError: false };
   const response = await apiClient.get('/profile');
   return response.data;
 };
 
-// Error handling utility
-const handleApiError = (error) => {
-  console.error('API Error:', error.message || error);
-  throw error; // Rethrow the structured error
+export const getImageById = async (imageId) => {
+  const response = await apiClient.get(`/uploads/${imageId}`, {
+    responseType: 'blob', // Important for handling binary image data
+  });
+  return response.data;
 };
 
-// Wrap all requests with try-catch for centralized error handling
+const handleApiError = (error) => {
+  console.error('API Error:', error.message || error);
+  throw error;
+};
+
 const apiRequest = async (requestFn) => {
   try {
     return await requestFn();
@@ -177,17 +187,19 @@ const apiRequest = async (requestFn) => {
   }
 };
 
-// Export wrapped functions
+
 export default {
   login: (email, password) => apiRequest(() => login(email, password)),
   register: (userData) => apiRequest(() => register(userData)),
   isAuthenticated,
   logout,
   getAllProducts: (page, limit) => apiRequest(() => getAllProducts(page, limit)),
+  getProductFilterOptions: () => apiRequest(() => getProductFilterOptions()),
   searchProducts: (filters) => apiRequest(() => searchProducts(filters)),
   getProductById: (productId) => apiRequest(() => getProductById(productId)),
   addToCart: (productId, quantity) => apiRequest(() => addToCart(productId, quantity)),
   viewCart: () => apiRequest(() => viewCart()),
+  updateCartItem: (productId, quantity) => apiRequest(() => updateCartItem(productId, quantity)),
   removeFromCart: (productId) => apiRequest(() => removeFromCart(productId)),
   clearCart: () => apiRequest(() => clearCart()),
   createOrder: (orderData) => apiRequest(() => createOrder(orderData)),
@@ -195,4 +207,5 @@ export default {
   trackOrder: (orderId) => apiRequest(() => trackOrder(orderId)),
   getOrderHistory: () => apiRequest(() => getOrderHistory()),
   getProfile: () => apiRequest(() => getProfile()),
+  getImageById: (imageId) => apiRequest(() => getImageById(imageId)),
 };

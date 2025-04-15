@@ -11,7 +11,7 @@ import Footer from "./Footer";
 import LoginPage from "../../pages/LoginPage";
 import Register from "../../pages/RegisterPage";
 import ErrorPage from "./ErrorPage";
-import { isAuthenticated } from "../../services/api"; // Adjust import path as needed
+import { isAuthenticated } from "../../services/api";
 
 const MainLayout = () => {
   const location = useLocation();
@@ -19,7 +19,6 @@ const MainLayout = () => {
   const [isNavLoading, setIsNavLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  // Protected routes requiring authentication
   const protectedRoutes = ["/orders", "/checkout"];
 
   useEffect(() => {
@@ -50,16 +49,15 @@ const MainLayout = () => {
 
   const handleModalClose = () => {
     setShowLoginModal(false);
-    navigate("/"); // Redirect to home if they close without logging in
+    navigate("/");
   };
 
-  // Callback to trigger modal from FloatingSidebar
   const handleCartClick = () => {
     if (!isAuthenticated()) {
       setShowLoginModal(true);
-      return false; // Indicate cart should not open
+      return false;
     }
-    return true; // Indicate cart can open
+    return true;
   };
 
   return (
@@ -74,12 +72,9 @@ const MainLayout = () => {
         <Route path="/register" element={<Register />} />
         <Route path="*" element={<ErrorPage message="Oops! Page not found." code={404} />} />
       </Routes>
-
       {shouldShowSidebar && <FloatingSidebar onCartClick={handleCartClick} />}
       <ThemeToggle />
       <Footer />
-
-      {/* Modal for login prompt */}
       {showLoginModal && (
         <>
           <input type="checkbox" id="login_modal" className="modal-toggle" checked readOnly />

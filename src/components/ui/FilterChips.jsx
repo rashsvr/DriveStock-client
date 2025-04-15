@@ -1,37 +1,31 @@
-// FilterChips.jsx
 import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
 
 function FilterChips({ onFilterChange, onClearAll, hasActiveFilters }) {
   const [selectedFactor, setSelectedFactor] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
+  const [filterOptions, setFilterOptions] = useState({});
 
-  const filterFactors = [
-    "condition",
-    "brand",
-    "availability",
-    "make",
-    "model",
-    "years"
-  ];
-
-  const filterOptions = {
-    condition: ["All", "New", "Used", "Refurbished"],
-    brand: ["All", "Bosch", "Denso", "Brembo"],
-    availability: ["All", "In Stock", "Out of Stock"],
-    make: ["All", "Toyota", "Nissan"],
-    model: ["All", "Corolla", "Altima", "Camry"],
-    years: ["All", "2015", "2016", "2018", "2020"],
-  };
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      try {
+        const response = await api.getProductFilterOptions();
+        setFilterOptions(response.data || {});
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchFilterOptions();
+  }, []);
 
   const handleFactorSelect = (factor) => {
     setSelectedFactor(factor);
-    // Don't reset selectedOption here - let it persist until explicit clear
+    setSelectedOption(null);
   };
 
   const handleOptionSelect = (option) => {
     setSelectedOption(option);
     onFilterChange({ [selectedFactor]: option });
-    // Don't reset anything here - keep selections visible
   };
 
   const handleRemoveOption = () => {
@@ -45,7 +39,6 @@ function FilterChips({ onFilterChange, onClearAll, hasActiveFilters }) {
     onFilterChange({});
   };
 
-  // Sync with parent filters if they change externally (e.g., Clear All)
   useEffect(() => {
     if (!hasActiveFilters) {
       setSelectedFactor(null);
@@ -57,7 +50,7 @@ function FilterChips({ onFilterChange, onClearAll, hasActiveFilters }) {
     <div className="filter flex flex-wrap gap-2 items-center">
       {!selectedFactor ? (
         <>
-          {filterFactors.map(factor => (
+          {Object.keys(filterOptions).map(factor => (
             <button
               key={factor}
               className="btn btn-sm btn-outline text-[#F97316] border-[#F97316]"
@@ -89,7 +82,7 @@ function FilterChips({ onFilterChange, onClearAll, hasActiveFilters }) {
               </button>
             </div>
           )}
-          {filterOptions[selectedFactor].map(option => (
+          {filterOptions[selectedFactor]?.map(option => (
             <button
               key={option}
               className={`btn btn-sm ${
