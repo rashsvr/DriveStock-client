@@ -1,14 +1,34 @@
-import React from 'react'
-import OrderHistoryCard from './OrderHistoryCard'
+import React from "react";
+import OrderHistoryCard from "./OrderHistoryCard";
 
-function OrderHistoryGrid() {
-    return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6 md:gap-10 lg:gap-12 xl:gap-16">
-         <div><OrderHistoryCard /></div>
-          <div><OrderHistoryCard /></div>
-          <div><OrderHistoryCard /></div> 
-          
-        </div>)
+function OrderHistoryGrid({ orders }) {
+  if (!orders?.length) {
+    return <p className="text-center text-gray-500 py-6">No orders found.</p>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {orders.map((order, index) => (
+        <div
+          key={order._id}
+          className="collapse collapse-arrow bg-base-100 border border-base-300"
+        >
+          <input
+            type="radio"
+            name="order-accordion"
+            defaultChecked={index === 0}
+          />
+          <div className="collapse-title font-semibold text-lg">
+            Order #{order._id.slice(-6)} -{" "}
+            {new Date(order.createdAt).toLocaleDateString()}
+          </div>
+          <div className="collapse-content">
+            <OrderHistoryCard order={order} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
-export default OrderHistoryGrid
+export default OrderHistoryGrid;

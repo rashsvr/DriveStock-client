@@ -148,15 +148,28 @@ export const cancelOrder = async (orderId) => {
   return response.data;
 };
 
-export const trackOrder = async (orderId) => {
+export const trackOrder = async (orderId, productId) => {
   if (!isAuthenticated()) throw { message: 'User must be logged in to track an order', code: 401, isBigError: false };
-  const response = await apiClient.get(`/buyer/order/track/${orderId}`);
-  return response.data;
+  console.log('trackOrder:', { orderId, productId }); // Debug
+  if (!productId) throw { message: 'productId is required', code: 400, isBigError: false };
+  try {
+    const response = await apiClient.post(`/buyer/order/track/${orderId}`, { productId });
+    return response.data;
+  } catch (error) {
+    console.error('trackOrder error:', error);
+    if (error.code === 404) {
+      const response = await apiClient.get(`/buyer/order/track/${orderId}`, {
+        params: { productId }
+      });
+      return response.data;
+    }
+    throw error;
+  }
 };
 
-export const getOrderHistory = async () => {
+export const getOrderHistory = async ({ page = 1, limit = 5 } = {}) => {
   if (!isAuthenticated()) throw { message: 'User must be logged in to view order history', code: 401, isBigError: false };
-  const response = await apiClient.get('/buyer/orders');
+  const response = await apiClient.get('/buyer/orders', { params: { page, limit } });
   return response.data;
 };
 
@@ -168,43 +181,29 @@ export const getProfile = async () => {
 
 export const getImageById = async (imageId) => {
   const response = await apiClient.get(`/uploads/${imageId}`, {
-    responseType: 'blob', // Important for handling binary image data
+    responseType: 'blob',
   });
   return response.data;
 };
 
-const handleApiError = (error) => {
-  console.error('API Error:', error.message || error);
-  throw error;
-};
-
-const apiRequest = async (requestFn) => {
-  try {
-    return await requestFn();
-  } catch (error) {
-    handleApiError(error);
-  }
-};
-
-
 export default {
-  login: (email, password) => apiRequest(() => login(email, password)),
-  register: (userData) => apiRequest(() => register(userData)),
+  login,
+  register,
   isAuthenticated,
   logout,
-  getAllProducts: (page, limit) => apiRequest(() => getAllProducts(page, limit)),
-  getProductFilterOptions: () => apiRequest(() => getProductFilterOptions()),
-  searchProducts: (filters) => apiRequest(() => searchProducts(filters)),
-  getProductById: (productId) => apiRequest(() => getProductById(productId)),
-  addToCart: (productId, quantity) => apiRequest(() => addToCart(productId, quantity)),
-  viewCart: () => apiRequest(() => viewCart()),
-  updateCartItem: (productId, quantity) => apiRequest(() => updateCartItem(productId, quantity)),
-  removeFromCart: (productId) => apiRequest(() => removeFromCart(productId)),
-  clearCart: () => apiRequest(() => clearCart()),
-  createOrder: (orderData) => apiRequest(() => createOrder(orderData)),
-  cancelOrder: (orderId) => apiRequest(() => cancelOrder(orderId)),
-  trackOrder: (orderId) => apiRequest(() => trackOrder(orderId)),
-  getOrderHistory: () => apiRequest(() => getOrderHistory()),
-  getProfile: () => apiRequest(() => getProfile()),
-  getImageById: (imageId) => apiRequest(() => getImageById(imageId)),
+  getAllProducts,
+  getProductFilterOptions,
+  searchProducts,
+  getProductById,
+  addToCart,
+  viewCart,
+  updateCartItem,
+  removeFromCart,
+  clearCart,
+  createOrder,
+  cancelOrder,
+  trackOrder,
+  getOrderHistory,
+  getProfile,
+  getImageById,
 };
