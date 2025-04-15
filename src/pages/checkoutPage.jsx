@@ -17,6 +17,35 @@ function CheckoutPage() {
     country: "",
   });
 
+  // List of Sri Lankan districts
+  const districts = [
+    "Ampara",
+    "Anuradhapura",
+    "Badulla",
+    "Batticaloa",
+    "Colombo",
+    "Galle",
+    "Gampaha",
+    "Hambantota",
+    "Jaffna",
+    "Kalutara",
+    "Kandy",
+    "Kegalle",
+    "Kilinochchi",
+    "Kurunegala",
+    "Mannar",
+    "Matale",
+    "Matara",
+    "Monaragala",
+    "Mullaitivu",
+    "Nuwara Eliya",
+    "Polonnaruwa",
+    "Puttalam",
+    "Ratnapura",
+    "Trincomalee",
+    "Vavuniya",
+  ];
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -59,14 +88,21 @@ function CheckoutPage() {
     setError(null);
 
     try {
-      if (!shippingAddress.street || !shippingAddress.city || !shippingAddress.postalCode || !shippingAddress.country) {
+      if (
+        !shippingAddress.street ||
+        !shippingAddress.city ||
+        !shippingAddress.postalCode ||
+        !shippingAddress.country
+      ) {
         throw { message: "Please fill all required fields." };
       }
 
       let orderData;
       if (singleItem) {
         orderData = {
-          items: [{ productId: singleItem.productId._id, quantity: singleItem.quantity }],
+          items: [
+            { productId: singleItem.productId._id, quantity: singleItem.quantity },
+          ],
           shippingAddress,
         };
       } else if (cart) {
@@ -81,13 +117,39 @@ function CheckoutPage() {
         throw { message: "No items to checkout." };
       }
 
-      await api.createOrder(orderData);
-      await api.clearCart();
-      alert("Order placed successfully!");
-      navigate("/orders");
+      const response = await api.createOrder(orderData);
+      const { payhereData } = response.data;
+
+      // Initiate payment using centralized API function
+      await api.initiatePayment(
+        payhereData,
+        (orderId) => {
+          // On success
+          api.clearCart().then(() => {
+            alert(`Payment successful! Order ID: ${orderId}`);
+            navigate("/orders");
+          }).catch((err) => {
+            setError("Failed to clear cart: " + err.message);
+            setIsLoading(false);
+          });
+        },
+        () => {
+          // On dismiss
+          setError("Payment was dismissed. Please try again.");
+          setIsLoading(false);
+        },
+        (error) => {
+          // On error
+          setError(`Payment failed: ${error}. Please contact support or try again.`);
+          setIsLoading(false);
+        }
+      );
     } catch (err) {
-      setError(err.message || "Failed to create order.");
-    } finally {
+      console.error("Checkout Error:", err);
+      setError(
+        err.message ||
+          "Failed to initiate payment. Please check your details and try again."
+      );
       setIsLoading(false);
     }
   };
@@ -130,7 +192,9 @@ function CheckoutPage() {
               <span>
                 {singleItem.productId.title} (x{singleItem.quantity})
               </span>
-              <span>${(singleItem.productId.price * singleItem.quantity).toFixed(2)}</span>
+              <span>
+                ${(singleItem.productId.price * singleItem.quantity).toFixed(2)}
+              </span>
             </div>
           ) : (
             cart?.items.map((item) => (
@@ -179,13 +243,19 @@ function CheckoutPage() {
           <label className="label">
             <span className="label-text">District</span>
           </label>
-          <input
-            type="text"
+          <select
             name="district"
             value={shippingAddress.district}
             onChange={handleChange}
-            className="input input-bordered w-full"
-          />
+            className="select select-bordered w-full"
+          >
+            <option value="">Select District</option>
+            {districts.map((district) => (
+              <option key={district} value={district}>
+                {district}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="label">
@@ -224,6 +294,7 @@ function CheckoutPage() {
           </button>
           <button
             type="submit"
+            id="payhere-payment"
             className="btn btn-primary flex-1"
             disabled={isLoading}
           >
@@ -233,7 +304,7 @@ function CheckoutPage() {
                 Processing...
               </>
             ) : (
-              "Place Order"
+              "Pay with PayHere"
             )}
           </button>
         </div>

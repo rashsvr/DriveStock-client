@@ -188,6 +188,65 @@ export const getImageById = async (imageId) => {
   return response.data;
 };
 
+export const initiatePayment = (payhereData, onSuccess, onDismiss, onError) => {
+  return new Promise((resolve, reject) => {
+    // Check if PayHere SDK is already loaded
+    if (window.payhere) {
+      startPayment(payhereData, onSuccess, onDismiss, onError, resolve, reject);
+    } else {
+      // Load PayHere SDK
+      const script = document.createElement("script");
+      script.src = "https://www.payhere.lk/lib/payhere.js";
+      script.async = true;
+      script.onload = () => {
+        console.log("PayHere SDK loaded");
+        startPayment(payhereData, onSuccess, onDismiss, onError, resolve, reject);
+      };
+      script.onerror = () => {
+        console.error("Failed to load PayHere SDK");
+        reject(new Error("Failed to load payment gateway."));
+      };
+      document.body.appendChild(script);
+    }
+  });
+};
+
+const startPayment = (payhereData, onSuccess, onDismiss, onError, resolve, reject) => {
+  // Ensure sandbox mode
+  payhereData.sandbox = true;
+
+  // Log payhereData for debugging
+  console.log("PayHere Data:", JSON.stringify(payhereData, null, 2));
+
+  // Set up PayHere event handlers
+  window.payhere.onCompleted = (orderId) => {
+    console.log("Payment completed. OrderID: " + orderId);
+    if (onSuccess) onSuccess(orderId);
+    resolve({ status: "completed", orderId });
+  };
+
+  window.payhere.onDismissed = () => {
+    console.log("Payment dismissed");
+    if (onDismiss) onDismiss();
+    resolve({ status: "dismissed" });
+  };
+
+  window.payhere.onError = (error) => {
+    console.log("Payment Error: " + error);
+    if (onError) onError(error);
+    reject(new Error(`Payment failed: ${error}`));
+  };
+
+  // Initiate payment
+  try {
+    console.log("Initiating PayHere Payment...");
+    window.payhere.startPayment(payhereData);
+  } catch (err) {
+    console.error("Payment Initiation Error:", err);
+    reject(new Error("Failed to initiate payment."));
+  }
+};
+
 export default {
   login,
   register,
@@ -208,4 +267,5 @@ export default {
   getOrderHistory,
   getProfile,
   getImageById,
+  initiatePayment,
 };
