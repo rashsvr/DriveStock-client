@@ -93,11 +93,10 @@ export const searchProducts = async (filters) => {
   Object.entries(filters).forEach(([key, value]) => {
     if (Array.isArray(value)) {
       processedFilters[key] = value.join(',');
-    } else {
+    } else if (value && value !== 'All') {
       processedFilters[key] = value;
     }
   });
-  
   const response = await apiClient.get('/buyer/products/search', { params: processedFilters });
   return response.data;
 };

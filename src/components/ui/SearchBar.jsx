@@ -1,21 +1,11 @@
-// SearchBar.jsx
 import React, { useState, useEffect, useRef } from "react";
+import api from "../../services/api";
 
 const SearchBar = ({ onSearch, initialSearch }) => {
   const [searchTerm, setSearchTerm] = useState(initialSearch || "");
   const [suggestions, setSuggestions] = useState([]);
   const [isFocused, setIsFocused] = useState(false);
   const wrapperRef = useRef(null);
-
-  const allSuggestions = [
-    "Brake Pads",
-    "Radiator",
-    "Oil Filter",
-    "Air Filter",
-    "Spark Plugs",
-    "Cooling System",
-    "Braking System"
-  ];
 
   useEffect(() => {
     setSearchTerm(initialSearch || "");
@@ -32,15 +22,21 @@ const SearchBar = ({ onSearch, initialSearch }) => {
   }, []);
 
   useEffect(() => {
-    if (searchTerm.trim() === "") {
-      setSuggestions([]);
-      return;
-    }
-
-    const filtered = allSuggestions
-      .filter(item => item.toLowerCase().includes(searchTerm.toLowerCase()))
-      .slice(0, 3);
-    setSuggestions(filtered);
+    const fetchSuggestions = async () => {
+      if (searchTerm.trim() === "") {
+        setSuggestions([]);
+        return;
+      }
+      try {
+        const response = await api.searchProducts({ keyword: searchTerm, limit: 3 });
+        const titles = response.data.map(product => product.title).slice(0, 3);
+        setSuggestions(titles);
+      } catch (err) {
+        console.error("Error fetching suggestions:", err);
+        setSuggestions([]);
+      }
+    };
+    fetchSuggestions();
   }, [searchTerm]);
 
   const handleSuggestionClick = (suggestion) => {
@@ -94,22 +90,22 @@ const SearchBar = ({ onSearch, initialSearch }) => {
             </svg>
           </button>
         )}
-        <button 
+        <button
           onClick={handleSearchSubmit}
           className="btn join-item bg-[#F97316] hover:bg-[#F97316]/80 border-none text-white"
         >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-5 w-5" 
-            fill="none" 
-            viewBox="0 0 24 24" 
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth="2" 
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
           </svg>
         </button>

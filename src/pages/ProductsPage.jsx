@@ -23,38 +23,25 @@ const ProductsPage = () => {
     setError(null);
     try {
       let response;
-      
+
+      const queryParams = { page, limit, ...filters };
+      if (searchTerm) queryParams.keyword = searchTerm;
+
       if (Object.keys(filters).length > 0 || searchTerm) {
-        // Use searchProducts when filters or search term exists
-        const searchFilters = { ...filters };
-        if (searchTerm) searchFilters.keyword = searchTerm;
-        response = await api.searchProducts(searchFilters);
+        response = await api.searchProducts(queryParams);
       } else {
-        // Use getAllProducts for initial load without filters
         response = await api.getAllProducts(page, limit);
       }
 
-      // Process images
-      const processedProducts = await Promise.all(
-        response.data.map(async (product) => {
-          const images = await Promise.all(
-            product.images.map(async (img) => {
-              try {
-                // Extract the image ID from the URL
-                const imageId = img.split('/').pop();
-                return await api.getImage(`/uploads/${imageId}`);
-              } catch (err) {
-                console.error("Error loading image:", err);
-                return "https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp";
-              }
-            })
-          );
-          return { ...product, images };
-        })
-      );
+      const processedProducts = response.data.map(product => ({
+        ...product,
+        images: product.images?.length
+          ? product.images
+          : ["https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"],
+      }));
 
       setProducts(isLoadMore ? [...products, ...processedProducts] : processedProducts);
-      setTotal(response.total || processedProducts.length);
+      setTotal(response.pagination?.total || processedProducts.length);
     } catch (err) {
       setError(err.message || "Failed to load products. Please try again.");
       setProducts([]);
@@ -79,7 +66,7 @@ const ProductsPage = () => {
   const handleFilterChange = (newFilters) => {
     setFilters(prev => ({
       ...prev,
-      ...newFilters
+      ...newFilters,
     }));
     setPage(1);
   };
@@ -102,15 +89,15 @@ const ProductsPage = () => {
         showSearch={true}
         showFilters={true}
         showSecondaryFilters={false}
-        showLoadMore={total > products.length && !(Object.keys(filters).length > 0 || searchTerm)}
+        showLoadMore={total > products.length}
         onLoadMore={handleLoadMore}
         isLoading={isProcessing}
         SearchComponent={() => (
           <SearchBar onSearch={handleSearch} initialSearch={searchTerm} />
         )}
         FilterComponent={() => (
-          <FilterChips 
-            onFilterChange={handleFilterChange} 
+          <FilterChips
+            onFilterChange={handleFilterChange}
             onClearAll={handleClearAll}
             hasActiveFilters={
               Object.values(filters).some(val => val && val !== "All") || searchTerm
@@ -120,15 +107,25 @@ const ProductsPage = () => {
       >
         {error ? (
           <div className="alert alert-error">
-            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="stroke-current shrink-0 h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
             <span>{error}</span>
           </div>
         ) : products.length === 0 && !isProcessing ? (
           <div className="text-center py-10">
             <p className="text-gray-500">No products found matching your criteria.</p>
-            <button 
+            <button
               className="btn btn-sm btn-outline mt-4 text-[#F97316]"
               onClick={handleClearAll}
             >
