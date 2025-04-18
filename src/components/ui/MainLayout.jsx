@@ -18,7 +18,15 @@ const MainLayout = () => {
   const navigate = useNavigate();
   const [isNavLoading, setIsNavLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [cartShake, setCartShake] = useState(false);
 
+  // Define the onCartShake function
+  const handleCartShake = () => {
+    setCartShake(true);
+    setTimeout(() => setCartShake(false), 500); // Reset shake after 500ms
+  };
+
+  
   const protectedRoutes = ["/orders", "/checkout"];
 
   useEffect(() => {
@@ -66,7 +74,7 @@ const MainLayout = () => {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/orders" element={isAuthenticated() ? <OrdersPage /> : <HomePage />} />
-        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/products" element={<ProductsPage onCartShake={handleCartShake} />} />
         <Route path="/checkout" element={isAuthenticated() ? <CheckoutPage /> : <HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<Register />} />
