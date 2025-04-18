@@ -5,14 +5,34 @@ function FilterChips({ onFilterChange, onClearAll, hasActiveFilters }) {
   const [selectedFactor, setSelectedFactor] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
   const [filterOptions, setFilterOptions] = useState({});
+  const [loading, setLoading] = useState(true); // New loading state
 
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
+        setLoading(true); // Start loading
         const response = await api.getProductFilterOptions();
-        setFilterOptions(response.data || {});
+        const data = response.data || {};
+
+        // Process the new structure
+        const processedOptions = {};
+        Object.keys(data).forEach((key) => {
+          if (key === 'category') {
+            // Flatten the category data
+            processedOptions[key] = data[key].flatMap(category =>
+              category.categoryOption.map(option => option.name)
+            );
+          } else if (key !== 'priceRange') {
+            // Directly use arrays for other keys
+            processedOptions[key] = data[key];
+          }
+        });
+
+        setFilterOptions(processedOptions);
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoading(false); // Stop loading
       }
     };
     fetchFilterOptions();
@@ -48,9 +68,14 @@ function FilterChips({ onFilterChange, onClearAll, hasActiveFilters }) {
 
   return (
     <div className="filter flex flex-wrap gap-2 items-center">
-      {!selectedFactor ? (
+      {loading ? (
+        // Show loading bar
+        <div className="loading-bar w-full h-4 bg-gray-300 rounded overflow-hidden">
+          <div className="h-full bg-[#F97316] animate-pulse" style={{ width: '100%' }}></div>
+        </div>
+      ) : !selectedFactor ? (
         <>
-          {Object.keys(filterOptions).map(factor => (
+          {Object.keys(filterOptions).map((factor) => (
             <button
               key={factor}
               className="btn btn-sm btn-outline text-[#F97316] border-[#F97316]"
@@ -64,7 +89,7 @@ function FilterChips({ onFilterChange, onClearAll, hasActiveFilters }) {
         <>
           <div className="btn btn-sm bg-[#1A2526] text-[#F97316] flex items-center gap-1">
             {selectedFactor.charAt(0).toUpperCase() + selectedFactor.slice(1)}
-            <button 
+            <button
               onClick={handleRemoveFactor}
               className="text-[#F97316] hover:text-[#F97316]/80"
             >
@@ -74,7 +99,7 @@ function FilterChips({ onFilterChange, onClearAll, hasActiveFilters }) {
           {selectedOption && (
             <div className="btn btn-sm bg-[#1A2526] text-[#F97316] flex items-center gap-1">
               {selectedOption}
-              <button 
+              <button
                 onClick={handleRemoveOption}
                 className="text-[#F97316] hover:text-[#F97316]/80"
               >
@@ -82,12 +107,12 @@ function FilterChips({ onFilterChange, onClearAll, hasActiveFilters }) {
               </button>
             </div>
           )}
-          {filterOptions[selectedFactor]?.map(option => (
+          {filterOptions[selectedFactor]?.map((option) => (
             <button
               key={option}
               className={`btn btn-sm ${
-                selectedOption === option 
-                  ? 'bg-[#1A2526] text-[#F97316]' 
+                selectedOption === option
+                  ? 'bg-[#1A2526] text-[#F97316]'
                   : 'btn-outline text-[#F97316] border-[#F97316]'
               }`}
               onClick={() => handleOptionSelect(option)}
