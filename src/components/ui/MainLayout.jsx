@@ -12,6 +12,7 @@ import LoginPage from "../../pages/LoginPage";
 import Register from "../../pages/RegisterPage";
 import ErrorPage from "./ErrorPage";
 import { isAuthenticated } from "../../services/api";
+import PaymentSuccess from "../../pages/PaymentSuccessPage";
 
 const MainLayout = () => {
   const location = useLocation();
@@ -76,6 +77,7 @@ const MainLayout = () => {
         <Route path="/orders" element={isAuthenticated() ? <OrdersPage /> : <HomePage />} />
         <Route path="/products" element={<ProductsPage onCartShake={handleCartShake} />} />
         <Route path="/checkout" element={isAuthenticated() ? <CheckoutPage /> : <HomePage />} />
+        <Route path="/payment-success" element={isAuthenticated() ? <PaymentSuccess /> : <HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<Register />} />
         <Route path="*" element={<ErrorPage message="Oops! Page not found." code={404} />} />
