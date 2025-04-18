@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import OrderProductCard from "./OrderProductCard";
-import TrackOrderModal from "./TrackOrderModal"; 
+import TrackOrderModal from "./TrackOrderModal";
 import api from "../../services/api";
+
 function OrderHistoryCard({ order }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -23,7 +24,6 @@ function OrderHistoryCard({ order }) {
   };
 
   const handleTrack = () => {
-    console.log('OrderHistoryCard track:', { orderId: order._id, productId }); // Debug
     setShowTrackModal(true);
   };
 
@@ -46,9 +46,6 @@ function OrderHistoryCard({ order }) {
       ? "Processing"
       : "Pending";
   };
-
-  const productId = order.items[0]?.productId?._id;
-  console.log('OrderHistoryCard productId:', productId); // Debug
 
   return (
     <div className="space-y-4">
@@ -91,7 +88,7 @@ function OrderHistoryCard({ order }) {
         ))}
       </div>
 
-      <div className="divider"></div>
+      <div ısı="divider"></div>
 
       <div className="space-y-2">
         <h3 className="text-md font-semibold">Shipping Address</h3>
@@ -125,7 +122,7 @@ function OrderHistoryCard({ order }) {
         <button
           className="btn btn-primary"
           onClick={handleTrack}
-          disabled={isLoading || !productId}
+          disabled={isLoading}
           aria-label="Track order"
         >
           Track Order
@@ -149,12 +146,8 @@ function OrderHistoryCard({ order }) {
         )}
       </div>
 
-      {showTrackModal && productId && (
-        <TrackOrderModal
-          orderId={order._id}
-          productId={productId}
-          onClose={() => setShowTrackModal(false)}
-        />
+      {showTrackModal && (
+        <TrackOrderModal order={order} onClose={() => setShowTrackModal(false)} />
       )}
     </div>
   );

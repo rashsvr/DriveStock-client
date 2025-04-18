@@ -17,7 +17,14 @@ const OrdersPage = () => {
     try {
       const response = await api.getOrderHistory({ page: pageNum, limit: 5 });
       const newOrders = response.data || [];
-      setOrders((prev) => (pageNum === 1 ? newOrders : [...prev, ...newOrders]));
+      // Deduplicate orders by _id
+      setOrders((prev) => {
+        const combined = pageNum === 1 ? newOrders : [...prev, ...newOrders];
+        const uniqueOrders = Array.from(
+          new Map(combined.map((order) => [order._id, order])).values()
+        );
+        return uniqueOrders;
+      });
       setHasMore(newOrders.length === 5);
     } catch (err) {
       setError(err.message || "Failed to load order history.");
@@ -179,7 +186,7 @@ const OrdersPage = () => {
           </div>
         )}
         <div className="tabs tabs-lift mb-6">
-          {tabs.map((tab, index) => (
+          {tabs.map((tab) => (
             <React.Fragment key={tab.name}>
               <label className="tab">
                 <input
