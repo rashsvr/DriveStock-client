@@ -19,100 +19,118 @@ function TrackOrderModal({ order, onClose }) {
     );
   }
 
-  // Combine status history from all items into a single array
-  const allStatusHistory = order.items
-    .flatMap((item) => {
-      // Validate item and statusHistory
-      if (!item || !item.statusHistory || !Array.isArray(item.statusHistory)) {
-        console.warn(`Invalid statusHistory for item ${item?._id}:`, item);
-        return [];
-      }
-      return item.statusHistory.map((status) => ({
-        ...status,
-        itemId: item._id,
-        productTitle: item.productId?.title || "Unknown Product",
-        updatedAt: status.updatedAt || new Date().toISOString(), // Fallback for missing updatedAt
-      }));
-    })
-    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)); // Sort by most recent first
+  // Helper function to get status icon
+  const getStatusIcon = (status) => {
+    if (status.includes("Delivered")) return "🟢";
+    if (status.includes("Cancelled")) return "🔴";
+    if (status.includes("Shipped") || status.includes("Picked Up")) return "🚚";
+    if (status.includes("Processing") || status.includes("Accepted")) return "🔄";
+    if (status.includes("Confirmed")) return "✔️";
+    return "🟡";
+  };
 
-  // Debug: Log the combined status history
-  console.log("All Status History:", allStatusHistory);
+  // Helper function to get status color
+  const getStatusColor = (status) => {
+    if (status.includes("Delivered")) return "text-success";
+    if (status.includes("Cancelled")) return "text-error";
+    if (status.includes("Shipped") || status.includes("Picked Up")) return "text-info";
+    if (status.includes("Processing") || status.includes("Accepted")) return "text-warning";
+    if (status.includes("Confirmed")) return "text-success";
+    return "text-primary";
+  };
 
   return (
     <div className="modal modal-open">
-      <div className="modal-box max-w-lg">
-        <h3 className="font-bold text-lg">Track Order #{order._id.slice(-6)}</h3>
-        <div className="space-y-4">
-          {/* Display item details */}
-          {order.items.map((item) => (
-            <div key={item._id} className="border p-4 rounded-lg">
-              <div>
-                <p>
-                  <strong>Product:</strong> {item.productId?.title || "Unknown Product"}
-                </p>
-                <p>
-                  <strong>Quantity:</strong> {item.quantity}
-                </p>
-                <p>
-                  <strong>Status:</strong> {item.sellerStatus} / {item.courierStatus}
-                </p>
-                <p>
-                  <strong>Shipping:</strong> {order.shippingAddress.street},{" "}
-                  {order.shippingAddress.city},{" "}
-                  {order.shippingAddress.district || "N/A"},{" "}
-                  {order.shippingAddress.postalCode},{" "}
-                  {order.shippingAddress.country}
-                </p>
-              </div>
+      <div className="modal-box max-w-2xl max-h-[90vh] overflow-y-auto">
+        <h3 className="font-bold text-lg mb-4">
+          Track Order #{order._id.slice(-6)}
+        </h3>
+        
+        {/* Order Summary */}
+        <div className="bg-base-200 p-4 rounded-lg mb-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-semibold">Shipping Address</h4>
+              <p className="text-sm">
+                {order.shippingAddress.street}, {order.shippingAddress.city},{" "}
+                {order.shippingAddress.district || "N/A"},{" "}
+                {order.shippingAddress.postalCode}, {order.shippingAddress.country}
+              </p>
             </div>
-          ))}
-
-          {/* Unified scrollable status history */}
-          <div className="divider"></div>
-          <h4 className="font-semibold">Tracking History</h4>
-          <div
-            className="max-h-64 overflow-y-auto space-y-2"
-            role="region"
-            aria-label="Tracking history"
-          >
-            {allStatusHistory.length > 0 ? (
-              allStatusHistory.map((status, index) => (
-                <div
-                  key={`${status.itemId}-${status._id}-${index}`} // Unique key with index fallback
-                  className="flex items-start gap-2 p-2 bg-base-100 rounded"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="h-5 w-5 text-primary mt-0.5"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <div>
-                    <p className="text-sm font-medium">
-                      {status.productTitle}: {status.status}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(status.updatedAt).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500">No tracking history available.</p>
-            )}
+            <div>
+              <h4 className="font-semibold">Order Date</h4>
+              <p className="text-sm">
+                {new Date(order.createdAt).toLocaleString()}
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="modal-action">
+        {/* Items with their status history */}
+        <div className="space-y-6">
+          {order.items.map((item) => (
+            <div key={item._id} className="border rounded-lg overflow-hidden">
+              <div className="bg-base-100 p-4 border-b">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-semibold">
+                      {item.productId?.title || "Unknown Product"}
+                    </h4>
+                    <p className="text-sm">
+                      Qty: {item.quantity} × ${item.price.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="badge badge-primary">
+                    ${(item.quantity * item.price).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Status timeline */}
+              <div className="p-4">
+                <h5 className="font-medium mb-3">Status Timeline</h5>
+                {item.statusHistory?.length > 0 ? (
+                  <div className="space-y-3">
+                    {item.statusHistory
+                      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+                      .map((status, idx) => (
+                        <div key={status._id} className="flex gap-3">
+                          <div className="flex flex-col items-center">
+                            <div className={`w-3 h-3 rounded-full ${getStatusColor(status.status)}`}></div>
+                            {idx !== item.statusHistory.length - 1 && (
+                              <div className="w-px h-6 bg-gray-300"></div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <p className={`font-medium ${getStatusColor(status.status)}`}>
+                                {getStatusIcon(status.status)} {status.status}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {new Date(status.updatedAt).toLocaleString()}
+                              </p>
+                            </div>
+                            {status.updatedBy?.role && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Updated by: {status.updatedBy.role}
+                                {status.updatedBy.userId && ` (${status.updatedBy.userId.slice(-4)})`}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No status history available</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="modal-action mt-6">
           <button
-            className="btn btn-outline"
+            className="btn btn-primary"
             onClick={onClose}
             aria-label="Close modal"
           >
