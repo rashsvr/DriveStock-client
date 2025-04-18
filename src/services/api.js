@@ -354,6 +354,29 @@ export const initiatePayment = (payhereData, onSuccess, onDismiss, onError) => {
   });
 };
 
+
+
+
+
+export const makeComplaint = async ( orderId, {
+  productId,
+  description,
+  refundRequested,
+  refundAmount
+} = {}) => {
+  if (!isAuthenticated()) throw { message: 'User must be logged in to make complaint', code: 401, isBigError: false };
+  const response = await apiClient.get(`/buyer/order/${orderId}/complaint`, {
+    productId,
+    description,
+    refundRequested,
+    refundAmount
+  });
+  return response.data;
+};
+
+
+
+
 /**
  * The `startPayment` function in JavaScript initiates a payment using PayHere, handling success,
  * dismissal, and error scenarios with appropriate callbacks and promises.
