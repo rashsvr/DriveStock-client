@@ -10,14 +10,13 @@ const OrdersPage = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("Pending");
+  const [activeTab, setActiveTab] = useState("Payment Pending");
 
   const fetchOrders = async (pageNum) => {
     setIsProcessing(true);
     try {
       const response = await api.getOrderHistory({ page: pageNum, limit: 5 });
       const newOrders = response.data || [];
-      // Deduplicate orders by _id
       setOrders((prev) => {
         const combined = pageNum === 1 ? newOrders : [...prev, ...newOrders];
         const uniqueOrders = Array.from(
@@ -46,22 +45,14 @@ const OrdersPage = () => {
 
   const getOrderStatus = (order) => {
     const item = order.items[0];
-    return item.sellerStatus === "Cancelled"
-      ? "Cancelled"
-      : item.courierStatus === "Delivered"
-      ? "Delivered"
-      : item.sellerStatus === "Shipped"
-      ? "Shipped"
-      : item.sellerStatus === "Accepted"
-      ? "Processing"
-      : "Pending";
+    return item.orderStatus; // Use the unified orderStatus from the API response
   };
 
   const filteredOrders = orders.filter((order) => getOrderStatus(order) === activeTab);
 
   const tabs = [
     {
-      name: "Pending",
+      name: "Payment Pending",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -75,6 +66,25 @@ const OrdersPage = () => {
             strokeLinecap="round"
             strokeLinejoin="round"
             d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+          />
+        </svg>
+      ),
+    },
+    {
+      name: "Order Accepted",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="1.5"
+          stroke="currentColor"
+          className="size-4 me-2"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 12.75 11.25 15 15 9.75m-6-9A9 9 0 0 1 21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043Z"
           />
         </svg>
       ),
@@ -100,7 +110,64 @@ const OrdersPage = () => {
       ),
     },
     {
-      name: "Shipped",
+      name: "Shipped - Awaiting Courier",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="1.5"
+          stroke="currentColor"
+          className="size-4 me-2"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0 0 3m3-18.75v-1.5a1.5 1.5 0 0 0-3 0v1.5m3 18.75a1.5 1.5 0 0 1 0 3m-3-3a1.5 1.5 0 0 0 3 0m3-18.75a1.5 1.5 0 0 1 3 0v1.5m-3 0a1.5 1.5 0 0 0 0-3m3 18.75v1.5a1.5 1.5 0 0 0 3 0v-1.5m-3 0a1.5 1.5 0 0 1 0 3m-7.5-13.5h13.5m-13.5 4.5h13.5"
+          />
+        </svg>
+      ),
+    },
+    {
+      name: "Picked Up by Courier",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="1.5"
+          stroke="currentColor"
+          className="size-4 me-2"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0 0 3m3-18.75v-1.5a1.5 1.5 0 0 0-3 0v1.5m3 18.75a1.5 1.5 0 0 1 0 3m-3-3a1.5 1.5 0 0 0 3 0m3-18.75a1.5 1.5 0 0 1 3 0v1.5m-3 0a1.5 1.5 0 0 0 0-3m3 18.75v1.5a1.5 1.5 0 0 0 3 0v-1.5m-3 0a1.5 1.5 0 0 1 0 3m-7.5-13.5h13.5m-13.5 4.5h13.5"
+          />
+        </svg>
+      ),
+    },
+    {
+      name: "In Transit",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="1.5"
+          stroke="currentColor"
+          className="size-4 me-2"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0 0 3m3-18.75v-1.5a1.5 1.5 0 0 0-3 0v1.5m3 18.75a1.5 1.5 0 0 1 0 3m-3-3a1.5 1.5 0 0 0 3 0m3-18.75a1.5 1.5 0 0 1 3 0v1.5m-3 0a1.5 1.5 0 0 0 0-3m3 18.75v1.5a1.5 1.5 0 0 0 3 0v-1.5m-3 0a1.5 1.5 0 0 1 0 3m-7.5-13.5h13.5m-13.5 4.5h13.5"
+          />
+        </svg>
+      ),
+    },
+    {
+      name: "Out for Delivery",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -133,6 +200,25 @@ const OrdersPage = () => {
             strokeLinecap="round"
             strokeLinejoin="round"
             d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z"
+          />
+        </svg>
+      ),
+    },
+    {
+      name: "Delivery Failed",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="1.5"
+          stroke="currentColor"
+          className="size-4 me-2"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
           />
         </svg>
       ),
