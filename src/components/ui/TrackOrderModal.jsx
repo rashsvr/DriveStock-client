@@ -41,14 +41,14 @@ function TrackOrderModal({ order, onClose }) {
 
   return (
     <div className="modal modal-open">
-      <div className="modal-box max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="modal-box max-w-2xl">
         <h3 className="font-bold text-lg mb-4">
           Track Order #{order._id.slice(-6)}
         </h3>
         
         {/* Order Summary */}
         <div className="bg-base-200 p-4 rounded-lg mb-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <h4 className="font-semibold">Shipping Address</h4>
               <p className="text-sm">
@@ -90,7 +90,7 @@ function TrackOrderModal({ order, onClose }) {
               <div className="p-4">
                 <h5 className="font-medium mb-3">Status Timeline</h5>
                 {item.statusHistory?.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="max-h-[8rem] sm:max-h-[10rem] overflow-y-auto pr-2">
                     {item.statusHistory
                       .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
                       .map((status, idx) => (

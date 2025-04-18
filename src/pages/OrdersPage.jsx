@@ -245,7 +245,7 @@ const OrdersPage = () => {
   ];
 
   return (
-    <div className="py-6 px-4 sm:px-6 lg:px-8">
+    <div className="py-4 px-2 sm:px-4 lg:px-6 min-h-screen">
       {isProcessing && <LoadingAnimation />}
       <SubLayout
         title="Order History"
@@ -254,10 +254,10 @@ const OrdersPage = () => {
         isLoading={isProcessing}
       >
         {error && (
-          <div role="alert" className="alert alert-error mb-6">
+          <div role="alert" className="alert alert-error mb-4 max-w-full">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 shrink-0 stroke-current"
+              className="h-5 w-5 shrink-0 stroke-current"
               fill="none"
               viewBox="0 0 24 24"
             >
@@ -268,31 +268,26 @@ const OrdersPage = () => {
                 d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span>{error}</span>
+            <span className="text-sm">{error}</span>
           </div>
         )}
-        <div className="tabs tabs-lift mb-6">
+        <div className="tabs tabs-boxed flex flex-wrap justify-start gap-2 mb-4 overflow-x-auto">
           {tabs.map((tab) => (
-            <React.Fragment key={tab.name}>
-              <label className="tab">
-                <input
-                  type="radio"
-                  name="order_status_tabs"
-                  checked={activeTab === tab.name}
-                  onChange={() => setActiveTab(tab.name)}
-                />
-                {tab.icon}
-                {tab.name}
-              </label>
-              <div
-                className={`tab-content bg-base-100 border-base-300 p-6 ${
-                  activeTab === tab.name ? "block" : "hidden"
-                }`}
-              >
-                <OrderHistoryGrid orders={filteredOrders} />
-              </div>
-            </React.Fragment>
+            <button
+              key={tab.name}
+              className={`tab flex items-center px-3 py-2 text-sm font-medium ${
+                activeTab === tab.name ? "tab-active" : ""
+              }`}
+              onClick={() => setActiveTab(tab.name)}
+            >
+              {tab.icon}
+              <span className="hidden sm:inline">{tab.name}</span>
+              <span className="sm:hidden">{tab.name.split(" ")[0]}</span>
+            </button>
           ))}
+        </div>
+        <div className="mt-4">
+          <OrderHistoryGrid orders={filteredOrders} />
         </div>
       </SubLayout>
     </div>
