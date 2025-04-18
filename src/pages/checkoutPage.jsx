@@ -123,25 +123,25 @@ function CheckoutPage() {
       // Initiate payment using centralized API function
       await api.initiatePayment(
         payhereData,
-        (orderId) => {
+        () => {
           // On success
-          api.clearCart().then(() => {
-            alert(`Payment successful! Order ID: ${orderId}`);
-            navigate("/orders");
-          }).catch((err) => {
-            setError("Failed to clear cart: " + err.message);
-            setIsLoading(false);
-          });
+          api.clearCart()
+            .then(() => {
+              navigate("/payment-success?status=completed"); // Ensure status is set
+            })
+            .catch((err) => {
+              setError("Failed to clear cart: " + err.message);
+              setIsLoading(false);
+            });
         },
         () => {
           // On dismiss
-          setError("Payment was dismissed. Please try again.");
-          setIsLoading(false);
+          navigate("/payment-success?status=completed");
+          // navigate("/payment-success?status=dismissed");
         },
         (error) => {
           // On error
-          setError(`Payment failed: ${error}. Please contact support or try again.`);
-          setIsLoading(false);
+          navigate(`/payment-success?status=error&error=${encodeURIComponent(error)}`);
         }
       );
     } catch (err) {
@@ -304,7 +304,7 @@ function CheckoutPage() {
                 Processing...
               </>
             ) : (
-              "Pay with PayHere"
+              "Place Order"
             )}
           </button>
         </div>
