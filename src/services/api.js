@@ -60,10 +60,7 @@ apiClient.interceptors.response.use(
       code = 401;
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      if (error.response?.data?.message === "Invalid token") {
-        // Redirect to login page
-        window.location.href = '/login';
-      }
+      window.location.href = '/login';
     } else if (status === 404) {
       message = error.response?.data?.message || 'Resource not found.';
       code = 404;

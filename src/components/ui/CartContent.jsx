@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import CartGrid from "./CartGrid"; 
+import CartGrid from "./CartGrid";
 import api from "../../services/api";
 
 function CartContent({ onClose, isOpen, triggerShake }) {
@@ -43,7 +43,21 @@ function CartContent({ onClose, isOpen, triggerShake }) {
   const handleQuantityChange = async (productId, newQuantity) => {
     setIsLoading(true);
     try {
-      await api.updateCartItem(productId, newQuantity);
+      // Check stock availability before proceeding
+      const product = await api.getProductById(productId);
+      if (newQuantity > product.data.stock) {
+        throw { message: `Only ${product.data.stock} items in stock`, code: 400, isBigError: false };
+      }
+
+      // Remove the item from the cart
+      await api.removeFromCart(productId);
+      
+      // Add the item back with the new quantity
+      if (newQuantity > 0) {
+        await api.addToCart(productId, newQuantity);
+      }
+
+      // Refresh the cart
       await fetchCart();
       triggerShake();
     } catch (err) {
