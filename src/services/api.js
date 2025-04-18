@@ -354,22 +354,25 @@ export const initiatePayment = (payhereData, onSuccess, onDismiss, onError) => {
   });
 };
 
-
-
-
-
-export const makeComplaint = async ( orderId, {
-  productId,
-  description,
-  refundRequested,
-  refundAmount
-} = {}) => {
+/**
+ * Submits a complaint for a delivered order
+ * @param {string} orderId - Order ID
+ * @param {Object} complaintData - Complaint details
+ * @param {string} complaintData.productId - Product ID
+ * @param {string} complaintData.description - Complaint description
+ * @param {boolean} complaintData.refundRequested - Whether a refund is requested
+ * @param {number} [complaintData.refundAmount] - Requested refund amount
+ * @returns {Promise<{ success: boolean, data: Object }>}
+ */
+export const makeComplaint = async (orderId, { productId, description, refundRequested, refundAmount } = {}) => {
   if (!isAuthenticated()) throw { message: 'User must be logged in to make complaint', code: 401, isBigError: false };
-  const response = await apiClient.get(`/buyer/order/${orderId}/complaint`, {
+  if (!productId) throw { message: 'Product ID is required', code: 400, isBigError: false };
+  if (!description) throw { message: 'Description is required', code: 400, isBigError: false };
+  const response = await apiClient.post(`/buyer/order/${orderId}/complaint`, {
     productId,
     description,
     refundRequested,
-    refundAmount
+    refundAmount,
   });
   return response.data;
 };
@@ -443,6 +446,7 @@ export default {
   isAuthenticated,
   logout,
   getAllProducts,
+  makeComplaint,
   getProductFilterOptions,
   searchProducts,
   getProductById,
@@ -454,6 +458,7 @@ export default {
   cancelOrder,
   trackOrder,
   getOrderHistory,
+  
   getProfile,
   getImageById,
   initiatePayment,

@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import OrderProductCard from "./OrderProductCard";
-import TrackOrderModal from "./TrackOrderModal";
+import TrackOrderModal from "./TrackOrderModal"; 
 import api from "../../services/api";
+import ComplaintModal from "./ComplaintModal.jsx";
 
 function OrderHistoryCard({ order }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showTrackModal, setShowTrackModal] = useState(false);
+  const [showComplaintModal, setShowComplaintModal] = useState(false); // State for complaint modal
 
   const handleCancel = async () => {
     if (window.confirm("Are you sure you want to cancel this order?")) {
@@ -27,11 +29,19 @@ function OrderHistoryCard({ order }) {
     setShowTrackModal(true);
   };
 
+  const handleComplaint = () => {
+    setShowComplaintModal(true);
+  };
+
   const canCancel = order.items.some(
     (item) =>
       item.sellerStatus !== "Cancelled" &&
       item.sellerStatus !== "Shipped" &&
       item.sellerStatus !== "Delivered"
+  );
+
+  const isDelivered = order.items.some(
+    (item) => item.courierStatus === "Delivered"
   );
 
   const getOrderStatus = () => {
@@ -88,7 +98,7 @@ function OrderHistoryCard({ order }) {
         ))}
       </div>
 
-      <div ısı="divider"></div>
+      <div className="divider"></div>
 
       <div className="space-y-2">
         <h3 className="text-md font-semibold">Shipping Address</h3>
@@ -144,10 +154,23 @@ function OrderHistoryCard({ order }) {
             )}
           </button>
         )}
+        {isDelivered && (
+          <button
+            className="btn btn-outline btn-warning"
+            onClick={handleComplaint}
+            disabled={isLoading}
+            aria-label="Submit complaint"
+          >
+            Submit Complaint
+          </button>
+        )}
       </div>
 
       {showTrackModal && (
         <TrackOrderModal order={order} onClose={() => setShowTrackModal(false)} />
+      )}
+      {showComplaintModal && (
+        <ComplaintModal order={order} onClose={() => setShowComplaintModal(false)} />
       )}
     </div>
   );
