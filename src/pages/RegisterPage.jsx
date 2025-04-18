@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import AuthLayout from "../components/ui/AuthLayout";
 import Alert from "../components/ui/Alert"; // Import the new Alert component
 import api from "../services/api";

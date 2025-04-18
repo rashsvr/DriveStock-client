@@ -7,6 +7,7 @@ import OrdersPage from "../../pages/OrdersPage";
 import ProductsPage from "../../pages/ProductsPage";
 import HomePage from "../../pages/HomePage";
 import CheckoutPage from "../../pages/checkoutPage";
+import PaymentSuccess from "../../pages/PaymentSuccessPage"; // Import the new page
 import Footer from "./Footer";
 import LoginPage from "../../pages/LoginPage";
 import Register from "../../pages/RegisterPage";
@@ -19,7 +20,7 @@ const MainLayout = () => {
   const [isNavLoading, setIsNavLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  const protectedRoutes = ["/orders", "/checkout"];
+  const protectedRoutes = ["/orders", "/checkout", "/payment-success"];
 
   useEffect(() => {
     setIsNavLoading(true);
@@ -36,8 +37,8 @@ const MainLayout = () => {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
-  const hideSidebarPaths = ["/login", "/register"];
-  const isErrorPage = !["/", "/orders", "/products", "/checkout", "/login", "/register"].some(path =>
+  const hideSidebarPaths = ["/login", "/register", "/payment-success"];
+  const isErrorPage = !["/", "/orders", "/products", "/checkout", "/login", "/register", "/payment-success"].some(path =>
     matchPath(path, location.pathname)
   );
   const shouldShowSidebar = !hideSidebarPaths.includes(location.pathname) && !isErrorPage;
@@ -68,6 +69,7 @@ const MainLayout = () => {
         <Route path="/orders" element={isAuthenticated() ? <OrdersPage /> : <HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/checkout" element={isAuthenticated() ? <CheckoutPage /> : <HomePage />} />
+        <Route path="/payment-success" element={isAuthenticated() ? <PaymentSuccess /> : <HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<Register />} />
         <Route path="*" element={<ErrorPage message="Oops! Page not found." code={404} />} />
