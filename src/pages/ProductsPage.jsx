@@ -6,6 +6,7 @@ import SearchBar from "../components/ui/SearchBar";
 import FilterChips from "../components/ui/FilterChips";
 import api from "../services/api";
 import { useNavigate } from "react-router-dom";
+import Modal from "../components/ui/Modal";
 
 const ProductsPage = ({ onCartShake }) => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -15,8 +16,17 @@ const ProductsPage = ({ onCartShake }) => {
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
   const limit = 10;
   const navigate = useNavigate();
+
+  const closeModal = () => {
+    setModalState({ isOpen: false, title: "", message: "" });
+  };
 
   const fetchProducts = async (isLoadMore = false) => {
     setIsProcessing(true);
@@ -135,11 +145,23 @@ const ProductsPage = ({ onCartShake }) => {
             onBuyNow={(productId, quantity) => {
               api.addToCart(productId, quantity)
                 .then(() => navigate(`/checkout?productId=${productId}`))
-                .catch((err) => alert(err.message || "Failed to add to cart."));
+                .catch((err) => {
+                  setModalState({
+                    isOpen: true,
+                    title: "Error",
+                    message: err.message || "Failed to add to cart.",
+                  });
+                });
             }}
           />
         )}
       </SubLayout>
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        title={modalState.title}
+        message={modalState.message}
+      />
     </div>
   );
 };

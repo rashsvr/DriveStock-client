@@ -2,12 +2,22 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CartGrid from "./CartGrid";
 import api from "../../services/api";
+import Modal from "./Modal";
 
 function CartContent({ onClose, isOpen, triggerShake }) {
   const [cart, setCart] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
   const navigate = useNavigate();
+
+  const closeModal = () => {
+    setModalState({ isOpen: false, title: "", message: "" });
+  };
 
   const fetchCart = async () => {
     setIsLoading(true);
@@ -62,7 +72,11 @@ function CartContent({ onClose, isOpen, triggerShake }) {
       triggerShake();
     } catch (err) {
       if (err.message.includes("stock")) {
-        alert(err.message);
+        setModalState({
+          isOpen: true,
+          title: "Out of Stock",
+          message: err.message,
+        });
       } else {
         setError(err.message || "Failed to update quantity.");
       }
@@ -150,6 +164,13 @@ function CartContent({ onClose, isOpen, triggerShake }) {
           </button>
         </div>
       )}
+
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        title={modalState.title}
+        message={modalState.message}
+      />
     </div>
   );
 }

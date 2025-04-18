@@ -1,24 +1,45 @@
 import React, { useState } from "react";
-import api from "../../services/api";
+import api from "../../services/api"; 
+import Modal from "./Modal";
 
 const ProductCard = ({ product, onCartShake, onBuyNow }) => {
   const [quantity, setQuantity] = useState(1);
-  const [showStockModal, setShowStockModal] = useState(false);
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
   const [isLoading, setIsLoading] = useState(false);
   const defaultImage = "https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp";
   const imageUrl = product.images?.length > 0 ? product.images[0] : defaultImage;
+
+  const closeModal = () => {
+    setModalState({ isOpen: false, title: "", message: "" });
+  };
 
   const handleAddToCart = async () => {
     setIsLoading(true);
     try {
       await api.addToCart(product._id, quantity);
       onCartShake();
-      alert(`${product.title} added to cart!`);
+      setModalState({
+        isOpen: true,
+        title: "Success",
+        message: `${product.title} added to cart!`,
+      });
     } catch (err) {
       if (err.message.includes("stock")) {
-        setShowStockModal(true);
+        setModalState({
+          isOpen: true,
+          title: "Out of Stock",
+          message: `Sorry, only ${product.stock} ${product.title} available. Please adjust the quantity.`,
+        });
       } else {
-        alert(err.message || "Failed to add to cart.");
+        setModalState({
+          isOpen: true,
+          title: "Error",
+          message: err.message || "Failed to add to cart.",
+        });
       }
     } finally {
       setIsLoading(false);
@@ -156,24 +177,12 @@ const ProductCard = ({ product, onCartShake, onBuyNow }) => {
         </div>
       </div>
 
-      {showStockModal && (
-        <div className="modal modal-open">
-          <div className="modal-box max-w-sm">
-            <h3 className="font-bold text-lg">Out of Stock</h3>
-            <p className="py-4">
-              Sorry, only {product.stock} {product.title} available. Please adjust the quantity.
-            </p>
-            <div className="modal-action">
-              <button
-                className="btn btn-primary"
-                onClick={() => setShowStockModal(false)}
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        title={modalState.title}
+        message={modalState.message}
+      />
     </>
   );
 };
