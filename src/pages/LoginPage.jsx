@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/ui/AuthLayout";
-import Alert from "../components/ui/Alert"; // Import the new Alert component
+import Alert from "../components/ui/Alert";
 import api from "../services/api";
 
 function LoginPage() {
@@ -10,13 +10,13 @@ function LoginPage() {
     email: "",
     password: "",
   });
-  const [alert, setAlert] = useState(null); // State for showing alerts
+  const [alert, setAlert] = useState(null);
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setAlert(null); // Clear alert on input change
+    setAlert(null);
   };
 
   const handleSubmit = async (e) => {
@@ -25,16 +25,31 @@ function LoginPage() {
     try {
       const response = await api.login(formData.email, formData.password);
       if (response.success) {
+        // Check account status
+        if (response.data.status !== "active") {
+          throw {
+            message: "Account is not active. Please contact support.",
+            code: "INACTIVE_ACCOUNT",
+            isBigError: true,
+          };
+        }
+        // Proceed with successful login
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify({ userId: response.data.userId }));
-        navigate("/"); // Redirect to home on success
+        navigate("/");
+      } else {
+        // Show API-provided message for success: false
+        throw {
+          message: response.message || "Login failed. Please try again.",
+          isBigError: false,
+        };
       }
     } catch (err) {
       const { message, code, isBigError } = err;
       if (isBigError) {
-        navigate('/error', { state: { message, code } }); // Redirect for big errors
+        navigate('/error', { state: { message, code } });
       } else {
-        setAlert({ type: "error", message }); // Show alert for small errors
+        setAlert({ type: "error", message });
       }
     } finally {
       setIsLoading(false);
