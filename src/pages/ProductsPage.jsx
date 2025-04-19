@@ -34,7 +34,15 @@ const ProductsPage = ({ onCartShake }) => {
     try {
       let response;
 
-      const queryParams = { page, limit, ...filters };
+      // Map category filter to categoryId
+      const queryParams = { page, limit };
+      Object.entries(filters).forEach(([key, value]) => {
+        if (key === 'category') {
+          queryParams['categoryId'] = value; // Use category option _id as categoryId
+        } else {
+          queryParams[key] = value;
+        }
+      });
       if (searchTerm) queryParams.keyword = searchTerm;
 
       if (Object.keys(filters).length > 0 || searchTerm) {

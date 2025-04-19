@@ -5,34 +5,36 @@ function FilterChips({ onFilterChange, onClearAll, hasActiveFilters }) {
   const [selectedFactor, setSelectedFactor] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
   const [filterOptions, setFilterOptions] = useState({});
-  const [loading, setLoading] = useState(true); // New loading state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        setLoading(true); // Start loading
+        setLoading(true);
         const response = await api.getProductFilterOptions();
         const data = response.data || {};
 
-        // Process the new structure
+        // Process filter options
         const processedOptions = {};
         Object.keys(data).forEach((key) => {
           if (key === 'category') {
-            // Flatten the category data
+            // Store category options with _id and name
             processedOptions[key] = data[key].flatMap(category =>
-              category.categoryOption.map(option => option.name)
+              category.categoryOption.map(option => ({
+                _id: option._id,
+                name: option.name,
+              }))
             );
           } else if (key !== 'priceRange') {
-            // Directly use arrays for other keys
             processedOptions[key] = data[key];
           }
         });
 
         setFilterOptions(processedOptions);
       } catch (err) {
-        console.error(err);
+        console.error('Failed to fetch filter options:', err);
       } finally {
-        setLoading(false); // Stop loading
+        setLoading(false);
       }
     };
     fetchFilterOptions();
@@ -44,8 +46,10 @@ function FilterChips({ onFilterChange, onClearAll, hasActiveFilters }) {
   };
 
   const handleOptionSelect = (option) => {
-    setSelectedOption(option);
-    onFilterChange({ [selectedFactor]: option });
+    const optionValue = selectedFactor === 'category' ? option._id : option;
+    const optionDisplay = option.name || option;
+    setSelectedOption(optionDisplay);
+    onFilterChange({ [selectedFactor]: optionValue });
   };
 
   const handleRemoveOption = () => {
@@ -69,7 +73,6 @@ function FilterChips({ onFilterChange, onClearAll, hasActiveFilters }) {
   return (
     <div className="filter flex flex-wrap gap-2 items-center">
       {loading ? (
-        // Show loading bar
         <div className="loading-bar w-full h-4 bg-gray-300 rounded overflow-hidden">
           <div className="h-full bg-[#F97316] animate-pulse" style={{ width: '100%' }}></div>
         </div>
@@ -109,15 +112,15 @@ function FilterChips({ onFilterChange, onClearAll, hasActiveFilters }) {
           )}
           {filterOptions[selectedFactor]?.map((option) => (
             <button
-              key={option}
+              key={option._id || option}
               className={`btn btn-sm ${
-                selectedOption === option
+                selectedOption === (option.name || option)
                   ? 'bg-[#1A2526] text-[#F97316]'
                   : 'btn-outline text-[#F97316] border-[#F97316]'
               }`}
               onClick={() => handleOptionSelect(option)}
             >
-              {option}
+              {option.name || option}
             </button>
           ))}
         </>

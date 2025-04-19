@@ -137,9 +137,9 @@ export const getProductFilterOptions = async () => {
   return response.data;
 };
 
-/**
+ /**
  * Searches products based on processed filters
- * @param {Object} filters - Product filters (e.g., condition, brand, make)
+ * @param {Object} filters - Product filters (e.g., condition, brand, make, categoryId)
  * @returns {Promise<{ success: boolean, data: Object[] }>}
  */
 export const searchProducts = async (filters) => {
