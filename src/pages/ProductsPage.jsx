@@ -82,10 +82,7 @@ const ProductsPage = ({ onCartShake }) => {
   };
 
   const handleFilterChange = (newFilters) => {
-    setFilters(prev => ({
-      ...prev,
-      ...newFilters,
-    }));
+    setFilters(newFilters);
     setPage(1);
   };
 
