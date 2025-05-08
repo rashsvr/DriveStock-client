@@ -102,12 +102,12 @@ This sets up a fresh React + Vite + Tailwind project in `~/Documents/dev/MERN/Dr
   ```
   - Should be:
     ```js
-    module.exports = {
-      plugins: {
-        tailwindcss: {},
-        autoprefixer: {},
-      },
-    }
+ export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
     ```
   - Edit with `nano postcss.config.js` if incorrect.
 - **Update `src/index.css`:**
