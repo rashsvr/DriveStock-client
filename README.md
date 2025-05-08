@@ -100,15 +100,16 @@ This sets up a fresh React + Vite + Tailwind project in `~/Documents/dev/MERN/Dr
   ```bash
   cat postcss.config.js
   ```
-  - Should be:
-    ```js
- export default {
+ - Should be:
+
+```js
+export default {
   plugins: {
     tailwindcss: {},
     autoprefixer: {},
   },
 }
-    ```
+```
   - Edit with `nano postcss.config.js` if incorrect.
 - **Update `src/index.css`:**
   ```bash
